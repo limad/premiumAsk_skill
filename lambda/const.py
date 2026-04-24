@@ -6,8 +6,6 @@
 #  LinkedIn: https://www.linkedin.com/in/antonio-manuel-goncalves-983926142/
 #  Github: https://github.com/DEADSEC-SECURITY
 
-INPUT_TEXT_ENTITY = "input_text.alexa_actionable_notification"
-
 RESPONSE_YES = "ResponseYes"
 RESPONSE_NO = "ResponseNo"
 RESPONSE_NONE = "ResponseNone"

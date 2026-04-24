@@ -83,7 +83,7 @@
     "STOP_MESSAGE": "Adiós!",
     "WELCOME_MESSAGE": "Bienvenido a {}. El texto de entrada es: {}"
   },
-  "ft-FR": {
+  "fr-FR": {
     "SKILL_NAME": "Actionable notifications"
   },
   "fr-CA": {

@@ -1,6 +1,7 @@
 {
   "interactionModel": {
     "languageModel": {
+      "invocationName": "jeedom",
       "intents": [
         {
           "name": "AMAZON.CancelIntent",
@@ -19,67 +20,107 @@
           "samples": []
         },
         {
+          "name": "AMAZON.FallbackIntent",
+          "samples": []
+        },
+        {
           "name": "AMAZON.YesIntent",
           "samples": [
             "oui",
-            "ouais"
+            "ouais",
+            "ouaip",
+            "d'accord",
+            "ok",
+            "okay",
+            "bien sûr",
+            "absolument",
+            "c'est ça",
+            "exact",
+            "affirmatif",
+            "carrément",
+            "tout à fait"
           ]
         },
         {
           "name": "AMAZON.NoIntent",
           "samples": [
-            "non"
+            "non",
+            "nan",
+            "pas du tout",
+            "négatif",
+            "jamais",
+            "non merci",
+            "absolument pas",
+            "pas question"
           ]
         },
         {
+          "name": "String",
           "slots": [
             {
               "name": "Strings",
-              "type": "AMAZON.Person"
+              "type": "AMAZON.SearchQuery"
             }
           ],
-          "name": "String",
           "samples": [
-            "{Strings}"
+            "c'est {Strings}",
+            "je dis {Strings}",
+            "la réponse est {Strings}",
+            "ma réponse est {Strings}",
+            "dis {Strings}"
           ]
         },
         {
+          "name": "Select",
           "slots": [
             {
               "name": "Selections",
-              "type": "Selections"
+              "type": "AMAZON.SearchQuery"
             }
           ],
-          "name": "Select",
           "samples": [
-            "{Selections}"
+            "le {Selections}",
+            "la {Selections}",
+            "les {Selections}",
+            "je choisis {Selections}",
+            "sélectionne {Selections}",
+            "prends {Selections}",
+            "choisir {Selections}"
           ]
         },
         {
+          "name": "Number",
           "slots": [
             {
               "name": "Numbers",
               "type": "AMAZON.NUMBER"
             }
           ],
-          "name": "Number",
           "samples": [
-            "{Numbers}"
+            "{Numbers}",
+            "c'est {Numbers}",
+            "le nombre {Numbers}",
+            "le numéro {Numbers}"
           ]
         },
         {
+          "name": "Duration",
           "slots": [
             {
               "name": "Durations",
               "type": "AMAZON.DURATION"
             }
           ],
-          "name": "Duration",
           "samples": [
-            "{Durations}"
+            "{Durations}",
+            "pendant {Durations}",
+            "pour {Durations}",
+            "durant {Durations}",
+            "pour une durée de {Durations}"
           ]
         },
         {
+          "name": "Date",
           "slots": [
             {
               "name": "Dates",
@@ -90,46 +131,18 @@
               "type": "AMAZON.TIME"
             }
           ],
-          "name": "Date",
           "samples": [
-            "{Dates} a {Times}",
-            "a {Times}",
-            "{Dates}"
+            "{Dates}",
+            "à {Times}",
+            "le {Dates}",
+            "pour le {Dates}",
+            "pour {Times}",
+            "{Dates} à {Times}",
+            "le {Dates} à {Times}"
           ]
         }
       ],
-      "types": [
-        {
-          "values": [
-            {
-              "name": {
-                "synonyms": [
-                  "Amazon",
-                  "Amazon Video"
-                ],
-                "value": "Amazon Prime"
-              }
-            },
-            {
-              "name": {
-                "value": "Hulu"
-              }
-            },
-            {
-              "name": {
-                "value": "YouTube"
-              }
-            },
-            {
-              "name": {
-                "value": "Netflix"
-              }
-            }
-          ],
-          "name": "Selections"
-        }
-      ],
-      "invocationName": "jee question"
+      "types": []
     }
   }
 }

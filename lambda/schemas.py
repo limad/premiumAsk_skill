@@ -1,29 +1,19 @@
-#  Copyright (c) 2022.
-#  All rights reserved to the creator of the following script/program/app, please do not
-#  use or distribute without prior authorization from the creator.
-#  Creator: Antonio Manuel Nunes Goncalves
-#  Email: amng835@gmail.com
-#  LinkedIn: https://www.linkedin.com/in/antonio-manuel-goncalves-983926142/
-#  Github: https://github.com/DEADSEC-SECURITY
-
-# Built-In Imports
+# Schemas d'état question/réponse — dataclasses stdlib (plus de dépendance pydantic).
+from dataclasses import dataclass, field
 from typing import Optional
 
-# 3rd-Party Imports
-from pydantic import BaseModel, Field
 
-# Local Imports
-
-
-class QuestionStateError(BaseModel):
-    _error: bool = Field(default=True, alias="error", title="error")
+@dataclass
+class QuestionStateError:
     text: str
+    error: bool = True
 
 
-class QuestionState(BaseModel):
-    _error: bool = Field(default=False, alias="error", title="error")
+@dataclass
+class QuestionState:
     text: str
-    event_id: Optional[str]
-    suppress_confirmation: bool = Field(default=False)
-    deviceSerialNumber: Optional[str]
-    textBrut: str
+    event_id: Optional[str] = None
+    suppress_confirmation: bool = False
+    deviceSerialNumber: Optional[str] = None
+    textBrut: str = ""
+    error: bool = False
