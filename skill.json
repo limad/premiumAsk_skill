@@ -1,0 +1,62 @@
+{
+	"manifest": {
+		"apis": {
+			"custom": {
+				"endpoint": {
+					"uri": "arn:aws:lambda:eu-west-1:571600828883:function:33006444-3f6b-4bbb-9946-378e535f5288:Release_0"
+				},
+				"regions": {
+					"EU": {
+						"endpoint": {
+							"uri": "arn:aws:lambda:eu-west-1:571600828883:function:33006444-3f6b-4bbb-9946-378e535f5288:Release_0"
+						}
+					},
+					"NA": {
+						"endpoint": {
+							"uri": "arn:aws:lambda:us-east-1:571600828883:function:33006444-3f6b-4bbb-9946-378e535f5288:Release_0"
+						}
+					},
+					"FE": {
+						"endpoint": {
+							"uri": "arn:aws:lambda:us-west-2:571600828883:function:33006444-3f6b-4bbb-9946-378e535f5288:Release_0"
+						}
+					}
+				}
+			}
+		},
+		"manifestVersion": "1.0",
+		"publishingInformation": {
+			"automaticClonedLocale": {
+				"locales": [
+					{
+						"source": "fr-FR"
+					}
+				]
+			},
+			"locales": {
+				"fr-FR": {
+					"description": "skill Ask pour AlexaPremium",
+					"examplePhrases": [
+						"Alexa, ouvre pose question",
+						"Alexa, ouvre skillAsk",
+						"aide"
+					],
+					"keywords": [],
+					"name": "AlexaPremium_Ask",
+					"summary": "AlexaPremium skill Ask"
+				},
+				"fr-CA": {
+					"description": "skill Ask pour AlexaPremium",
+					"examplePhrases": [
+						"Alexa, ouvre pose question",
+						"Alexa, ouvre skillAsk",
+						"aide"
+					],
+					"keywords": [],
+					"name": "AlexaPremium_Ask",
+					"summary": "AlexaPremium skill Ask"
+				}
+			}
+		}
+	}
+}
