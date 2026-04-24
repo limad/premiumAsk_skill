@@ -79,6 +79,7 @@ JEEDOM_URL = JEEDOM_URL.rstrip("/")
 QUESTION_URL = f"{JEEDOM_URL}/plugins/alexaapiv2/core/php/askQuestion.php?apikey={APIKEY}"
 RESPONSE_URL = f"{JEEDOM_URL}/plugins/alexaapiv2/core/php/askResponse.php?apikey={APIKEY}&command=reponseASK"
 LOG_URL      = f"{JEEDOM_URL}/plugins/alexaapiv2/core/php/askResponse.php?apikey={APIKEY}&command=log"
+VOICE_URL    = f"{JEEDOM_URL}/plugins/alexaapiv2/core/php/voiceControl.php?apikey={APIKEY}"
 
 # ─── Logging ────────────────────────────────────────────────────────────────
 logger = logging.getLogger(__name__)
@@ -293,6 +294,37 @@ class JeeAsk:
         self.jee_state = None
         return ""
 
+    # ── voice control (mode direct — user commande Jeedom directement) ──────
+    def post_voice_command(self, query: str) -> str:
+        """
+        Envoie une commande vocale à Jeedom via voiceControl.php (interactQuery::tryToReply).
+        Retourne la réponse vocale à dire à l'utilisateur.
+        """
+        if not query or not query.strip():
+            return self.language_strings.get(prompts.ERROR_CONFIG, "Je n'ai pas compris.")
+        device_sn = ""
+        try:
+            device_sn = self.handler_input.request_envelope.context.system.device.device_id or ""
+        except AttributeError:
+            pass
+        body = {
+            "query": query.strip(),
+            "deviceSerialNumber": device_sn,
+            "code_version": CODE_VERS,
+        }
+        response = self._request("POST", VOICE_URL, body=body)
+        if response is None:
+            return self.language_strings.get(prompts.ERROR_CONFIG, "Jeedom ne répond pas.")
+        try:
+            data = json.loads(response.data.decode("utf-8") or "{}")
+        except json.JSONDecodeError:
+            logger.error("voiceControl: réponse JSON invalide")
+            return self.language_strings.get(prompts.ERROR_CONFIG, "Réponse invalide.")
+        reply = data.get("reply", "")
+        if not reply:
+            return self.language_strings.get(prompts.ERROR_CONFIG, "Je n'ai pas compris.")
+        return reply
+
     # ── log push vers Jeedom ────────────────────────────────────────────────
     def post_jee_log(self, log_text: str, **kwargs):
         """Envoie un log au plugin côté Jeedom (askResponse.php?command=log). Best-effort."""
@@ -326,18 +358,84 @@ class JeeAsk:
 # ════════════════════════════════════════════════════════════════════════════
 
 class LaunchRequestHandler(AbstractRequestHandler):
+    """
+    Deux modes :
+      A) Q/A (initiative Jeedom) — alexaAsk.json contient une question.
+         Lambda parle la question et attend la réponse.
+      B) Contrôle direct (initiative user) — alexaAsk.json vide ou absent.
+         Lambda invite l'user à donner une commande ("Que puis-je pour vous ?").
+    """
     def can_handle(self, handler_input):
         return is_request_type("LaunchRequest")(handler_input)
 
     def handle(self, handler_input):
         jee = JeeAsk(handler_input)
-        speak_output = jee.jee_state.text if jee.jee_state else ""
-        event_id = jee.jee_state.event_id if isinstance(jee.jee_state, QuestionState) else None
 
-        builder = handler_input.response_builder.speak(speak_output)
-        if event_id:
-            builder.ask("")
-        return builder.response
+        # Mode A : Q/A classique (Jeedom a posé une question)
+        if isinstance(jee.jee_state, QuestionState) and jee.jee_state.text:
+            builder = handler_input.response_builder.speak(jee.jee_state.text)
+            if jee.jee_state.event_id:
+                builder.ask("")
+            return builder.response
+
+        # Mode B : contrôle direct — prompt court et clair
+        # (on n'utilise pas WELCOME_MESSAGE qui est conçu pour le Q/A avec 2 placeholders)
+        data = handler_input.attributes_manager.request_attributes.get("_", {})
+        prompt_txt = data.get("DIRECT_PROMPT", "Que puis-je pour vous ?")
+        return handler_input.response_builder.speak(prompt_txt).ask(prompt_txt).response
+
+
+def _handle_voice_intent(handler_input, verb_prefix: str):
+    """
+    Handler générique pour les intents Voice* : reconstruit la phrase en préfixant
+    le verbe (qu'Alexa a consommé dans le carrier) puis forwarde à Jeedom.
+    """
+    jee = JeeAsk(handler_input, fetch_question=False)
+    query = (get_slot_value(handler_input, "Command") or "").strip()
+    if not query:
+        data = handler_input.attributes_manager.request_attributes.get("_", {})
+        return _handle_response(handler_input, data.get(prompts.ERROR_CONFIG, "Je n'ai pas compris."))
+    # Reconstruit "allumer le séjour" depuis verbe_prefix="allumer" + slot="le séjour"
+    full_query = f"{verb_prefix} {query}"
+    logger.info("VoiceCommand: %s", full_query)
+    reply = jee.post_voice_command(full_query)
+    return handler_input.response_builder.speak(reply).set_should_end_session(True).response
+
+
+class VoiceLaunchIntentHandler(AbstractRequestHandler):
+    """lance/active/démarre/exécute/déclenche {X} → Jeedom : 'activer X'."""
+    def can_handle(self, handler_input):
+        return is_intent_name("VoiceLaunch")(handler_input)
+
+    def handle(self, handler_input):
+        return _handle_voice_intent(handler_input, "activer")
+
+
+class VoiceTurnOnIntentHandler(AbstractRequestHandler):
+    """allume/ouvre/monte {X} → Jeedom : 'allumer X'."""
+    def can_handle(self, handler_input):
+        return is_intent_name("VoiceTurnOn")(handler_input)
+
+    def handle(self, handler_input):
+        return _handle_voice_intent(handler_input, "allumer")
+
+
+class VoiceTurnOffIntentHandler(AbstractRequestHandler):
+    """éteins/ferme/arrête/coupe/descends {X} → Jeedom : 'éteindre X'."""
+    def can_handle(self, handler_input):
+        return is_intent_name("VoiceTurnOff")(handler_input)
+
+    def handle(self, handler_input):
+        return _handle_voice_intent(handler_input, "éteindre")
+
+
+class VoiceSetIntentHandler(AbstractRequestHandler):
+    """mets/fais/règle/configure {X} → Jeedom : 'régler X'."""
+    def can_handle(self, handler_input):
+        return is_intent_name("VoiceSet")(handler_input)
+
+    def handle(self, handler_input):
+        return _handle_voice_intent(handler_input, "régler")
 
 
 class YesIntentHandler(AbstractRequestHandler):
@@ -582,6 +680,10 @@ class LocalizationInterceptor(AbstractRequestInterceptor):
 sb = SkillBuilder()
 
 sb.add_request_handler(LaunchRequestHandler())
+sb.add_request_handler(VoiceLaunchIntentHandler())
+sb.add_request_handler(VoiceTurnOnIntentHandler())
+sb.add_request_handler(VoiceTurnOffIntentHandler())
+sb.add_request_handler(VoiceSetIntentHandler())
 sb.add_request_handler(YesIntentHandler())
 sb.add_request_handler(NoIntentHandler())
 sb.add_request_handler(StringIntentHandler())

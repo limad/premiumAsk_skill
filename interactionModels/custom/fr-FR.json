@@ -140,6 +140,47 @@
             "{Dates} à {Times}",
             "le {Dates} à {Times}"
           ]
+        },
+        {
+          "name": "VoiceLaunch",
+          "slots": [{ "name": "Command", "type": "AMAZON.SearchQuery" }],
+          "samples": [
+            "lance {Command}",
+            "active {Command}",
+            "démarre {Command}",
+            "exécute {Command}",
+            "déclenche {Command}"
+          ]
+        },
+        {
+          "name": "VoiceTurnOn",
+          "slots": [{ "name": "Command", "type": "AMAZON.SearchQuery" }],
+          "samples": [
+            "allume {Command}",
+            "ouvre {Command}",
+            "monte {Command}"
+          ]
+        },
+        {
+          "name": "VoiceTurnOff",
+          "slots": [{ "name": "Command", "type": "AMAZON.SearchQuery" }],
+          "samples": [
+            "éteins {Command}",
+            "ferme {Command}",
+            "arrête {Command}",
+            "coupe {Command}",
+            "descends {Command}"
+          ]
+        },
+        {
+          "name": "VoiceSet",
+          "slots": [{ "name": "Command", "type": "AMAZON.SearchQuery" }],
+          "samples": [
+            "mets {Command}",
+            "fais {Command}",
+            "règle {Command}",
+            "configure {Command}"
+          ]
         }
       ],
       "types": []
