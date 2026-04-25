@@ -12,7 +12,8 @@
     "SKILL_NAME": "Jeedom custom actions",
     "STOP_MESSAGE": "Goodbye!",
     "WELCOME_MESSAGE": "Welcome to {}. Input text is: {}",
-    "DIRECT_PROMPT": "What can I do for you?"
+    "DIRECT_PROMPT": "What can I do for you?",
+    "HINT_TEXT": "say yes, no, or stop"
   },
   "de": {
     "ERROR_401": "Ich habe scheinbar keine Berechtigungen für die verbindung zu Jeedom. Bitte prüfe deinen H A Benutzer oder Access Token.",
@@ -27,7 +28,8 @@
     "SKILL_NAME": "Jeedom custom actions",
     "STOP_MESSAGE": "Machs gut!",
     "WELCOME_MESSAGE": "Willkommen bei {}. Der input text ist: {}",
-    "DIRECT_PROMPT": "Was kann ich für Sie tun?"
+    "DIRECT_PROMPT": "Was kann ich für Sie tun?",
+    "HINT_TEXT": "sagen Sie ja, nein oder stopp"
   },
   "fr": {
     "ERROR_401": "Il semblerait que je ne sois pas authorisée à accéder à Jeedom, veuillez verifier la configuration de votre skill, la clé API et essayez à nouveau.",
@@ -42,7 +44,8 @@
     "SKILL_NAME": "Jeedom custom actions",
     "STOP_MESSAGE": "Au revoir!",
     "WELCOME_MESSAGE": "Bienvenue sur {}. Le champ texte est: {}",
-    "DIRECT_PROMPT": "Que puis-je pour vous ?"
+    "DIRECT_PROMPT": "Que puis-je pour vous ?",
+    "HINT_TEXT": "dire oui, non, ou arrête"
   },
   "it": {
     "ERROR_401": "Problema con le autorizzazioni di accesso ad Jeedom: controllare l'account collegato o eventuali token utilizzati e riprovare",
@@ -57,7 +60,8 @@
     "SKILL_NAME": "Jeedom Austom Actions",
     "STOP_MESSAGE": "A presto!",
     "WELCOME_MESSAGE": "Benvenuto su {}. Il testo specificato e': {}",
-    "DIRECT_PROMPT": "Cosa posso fare per te?"
+    "DIRECT_PROMPT": "Cosa posso fare per te?",
+    "HINT_TEXT": "dire sì, no o fermati"
   },
   "pt": {
     "ERROR_401": "Parece que eu não estou autorizada a acessar seu Jeedom. Verifique as credenciais e tente novamente.",
@@ -72,7 +76,8 @@
     "SKILL_NAME": "Jeedom, ações customizadas",
     "STOP_MESSAGE": "Tchau!",
     "WELCOME_MESSAGE": "Bem vindo ao {}. A entrada de texto é: {}",
-    "DIRECT_PROMPT": "O que posso fazer por você?"
+    "DIRECT_PROMPT": "O que posso fazer por você?",
+    "HINT_TEXT": "diga sim, não ou pare"
   },
   "es": {
     "ERROR_401": "Parece que no tengo permisos para acceder a Jeedom. Por favor, comprueba el enlace de cuenta o el token de acceso y vuelve a intentarlo.",
@@ -87,7 +92,8 @@
     "SKILL_NAME": "Jeedom custom actions",
     "STOP_MESSAGE": "Adiós!",
     "WELCOME_MESSAGE": "Bienvenido a {}. El texto de entrada es: {}",
-    "DIRECT_PROMPT": "¿En qué puedo ayudarle?"
+    "DIRECT_PROMPT": "¿En qué puedo ayudarle?",
+    "HINT_TEXT": "diga sí, no o para"
   },
   "fr-FR": {
     "SKILL_NAME": "Actionable notifications"

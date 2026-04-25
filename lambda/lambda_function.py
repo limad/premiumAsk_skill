@@ -57,6 +57,7 @@ from ask_sdk_core.utils import (
     is_request_type,
 )
 from ask_sdk_model import SessionEndedReason
+from ask_sdk_model.interfaces.display import HintDirective, PlainTextHint
 from ask_sdk_model.slu.entityresolution import StatusCode
 
 # ─── Local imports ──────────────────────────────────────────────────────────
@@ -133,6 +134,14 @@ def _string_to_bool(value, default: bool = False) -> bool:
     return default
 
 
+def _add_hint(response_builder, text: str):
+    """Écrase le hint système Alexa par un texte personnalisé (appareils à écran)."""
+    try:
+        response_builder.add_directive(HintDirective(hint=PlainTextHint(text=text)))
+    except Exception:
+        pass
+
+
 def _handle_response(handler, speak_out: Optional[str]):
     """Renvoie la Response Alexa avec ou sans speech (permet de laisser Jeedom parler)."""
     if speak_out:
@@ -150,11 +159,13 @@ def _handle_qa_response(handler_input, jee, speak_out: Optional[str]):
     if isinstance(jee.jee_state, QuestionState) and jee.jee_state.text:
         # Multi-tour : nouvelle question Jeedom dans la même session Alexa
         logger.info("Dialog multi-tour: enchaînement question")
-        return (handler_input.response_builder
-                .speak(jee.jee_state.text)
-                .ask(jee.jee_state.text)
-                .set_should_end_session(False)
-                .response)
+        data = handler_input.attributes_manager.request_attributes.get("_", {})
+        builder = (handler_input.response_builder
+                   .speak(jee.jee_state.text)
+                   .ask(jee.jee_state.text)
+                   .set_should_end_session(False))
+        _add_hint(builder, data.get(prompts.HINT_TEXT, "dire arrête"))
+        return builder.response
     # Flow standard : 1 réponse utilisateur → fin
     return _handle_response(handler_input, speak_out)
 
@@ -437,18 +448,22 @@ class LaunchRequestHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         jee = JeeAsk(handler_input)
+        data = handler_input.attributes_manager.request_attributes.get("_", {})
+        hint_text = data.get(prompts.HINT_TEXT, "dire arrête")
 
         # Mode A : Q/A classique (Jeedom a posé une question)
         if isinstance(jee.jee_state, QuestionState) and jee.jee_state.text:
             builder = handler_input.response_builder.speak(jee.jee_state.text)
             if jee.jee_state.event_id:
                 builder.ask("")
+            _add_hint(builder, hint_text)
             return builder.response
 
         # Mode B : contrôle direct — prompt court et clair (i18n via DIRECT_PROMPT)
-        data = handler_input.attributes_manager.request_attributes.get("_", {})
         prompt_txt = data.get(prompts.DIRECT_PROMPT, "Que puis-je pour vous ?")
-        return handler_input.response_builder.speak(prompt_txt).ask(prompt_txt).response
+        builder = handler_input.response_builder.speak(prompt_txt).ask(prompt_txt)
+        _add_hint(builder, hint_text)
+        return builder.response
 
 
 """
@@ -494,11 +509,13 @@ def _handle_voice_intent(handler_input, intent_name: str):
         sess["pending_voice_options"] = result["options"]
         logger.info("VoiceCommand[%s]: ambiguous (%d options) → eliciting choice",
                     locale_short, len(result["options"]))
-        return (handler_input.response_builder
-                .speak(result["reply"])
-                .ask(result["reply"])
-                .set_should_end_session(False)
-                .response)
+        data = handler_input.attributes_manager.request_attributes.get("_", {})
+        builder = (handler_input.response_builder
+                   .speak(result["reply"])
+                   .ask(result["reply"])
+                   .set_should_end_session(False))
+        _add_hint(builder, data.get(prompts.HINT_TEXT, "dire arrête"))
+        return builder.response
 
     return handler_input.response_builder.speak(result["reply"]).set_should_end_session(True).response
 
