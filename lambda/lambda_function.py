@@ -387,20 +387,21 @@ class JeeAsk:
         response = self._request("POST", VOICE_URL, body=body)
         if response is None:
             return {"reply": self.language_strings.get(prompts.ERROR_CONFIG, "Jeedom ne répond pas."),
-                    "matched": False, "ambiguous": False, "options": []}
+                    "matched": False, "ambiguous": False, "options": [], "http_error": True}
         try:
             data = json.loads(response.data.decode("utf-8") or "{}")
         except json.JSONDecodeError:
             logger.error("voiceControl: réponse JSON invalide")
             return {"reply": self.language_strings.get(prompts.ERROR_CONFIG, "Réponse invalide."),
-                    "matched": False, "ambiguous": False, "options": []}
-        # Normalisation
+                    "matched": False, "ambiguous": False, "options": [], "http_error": True}
+        # Normalisation — http_error=False : Jeedom a répondu, matched indique si une interaction a été trouvée
         return {
-            "reply":     data.get("reply") or fallback,
-            "matched":   bool(data.get("matched")),
-            "ambiguous": bool(data.get("ambiguous")),
-            "options":   data.get("options") or [],
-            "query":     data.get("query", query.strip()),
+            "reply":      data.get("reply") or "",
+            "matched":    bool(data.get("matched")),
+            "ambiguous":  bool(data.get("ambiguous")),
+            "options":    data.get("options") or [],
+            "query":      data.get("query", query.strip()),
+            "http_error": False,
         }
 
     # ── log push vers Jeedom ────────────────────────────────────────────────
@@ -502,6 +503,11 @@ def _handle_voice_intent(handler_input, intent_name: str):
     full_query = f"{verb} {query}".strip()
     logger.info("VoiceCommand[%s]: %s", locale_short, full_query)
     result = jee.post_voice_command(full_query)
+    data   = handler_input.attributes_manager.request_attributes.get("_", {})
+
+    # ── Erreur HTTP : Jeedom injoignable ou réponse invalide ─────────────────
+    if result.get("http_error"):
+        return _handle_response(handler_input, data.get(prompts.ERROR_CONFIG, "Jeedom ne répond pas."))
 
     # ── Disambiguation : 2+ matches proches → on stocke et on demande ────────
     if result.get("ambiguous") and result.get("options"):
@@ -509,7 +515,6 @@ def _handle_voice_intent(handler_input, intent_name: str):
         sess["pending_voice_options"] = result["options"]
         logger.info("VoiceCommand[%s]: ambiguous (%d options) → eliciting choice",
                     locale_short, len(result["options"]))
-        data = handler_input.attributes_manager.request_attributes.get("_", {})
         builder = (handler_input.response_builder
                    .speak(result["reply"])
                    .ask(result["reply"])
@@ -517,6 +522,13 @@ def _handle_voice_intent(handler_input, intent_name: str):
         _add_hint(builder, data.get(prompts.HINT_TEXT, "dire arrête"))
         return builder.response
 
+    # ── Aucune interaction trouvée ────────────────────────────────────────────
+    if not result.get("matched"):
+        no_match = data.get(prompts.NO_MATCH, "Aucune commande trouvée pour cette demande.")
+        logger.info("VoiceCommand[%s]: no match for '%s'", locale_short, full_query)
+        return handler_input.response_builder.speak(no_match).set_should_end_session(True).response
+
+    # ── Succès ────────────────────────────────────────────────────────────────
     return handler_input.response_builder.speak(result["reply"]).set_should_end_session(True).response
 
 
