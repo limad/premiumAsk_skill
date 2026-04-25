@@ -43,11 +43,15 @@ def test_each_locale_has_all_intents(voice_verbs, locale):
     assert not missing, f"Locale '{locale}' : intents manquants {missing}"
 
 
+INTENTS_EMPTY_VERB_ALLOWED = {"VoiceQuery"}  # passe le slot tel quel à Jeedom
+
+
 @pytest.mark.parametrize("locale", sorted(EXPECTED_LOCALES))
 def test_each_verb_is_non_empty_string(voice_verbs, locale):
     for intent, verb in voice_verbs[locale].items():
         assert isinstance(verb, str), f"{locale}/{intent}: type {type(verb)}"
-        assert verb.strip(), f"{locale}/{intent}: verbe vide"
+        if intent not in INTENTS_EMPTY_VERB_ALLOWED:
+            assert verb.strip(), f"{locale}/{intent}: verbe vide"
 
 
 def test_french_verbs_canonical():
@@ -64,4 +68,4 @@ def test_french_verbs_canonical():
     assert voice_verbs["fr"]["VoiceTurnOn"] == "allumer"
     assert voice_verbs["fr"]["VoiceTurnOff"] == "éteindre"
     assert voice_verbs["fr"]["VoiceSet"] == "régler"
-    assert voice_verbs["fr"]["VoiceQuery"] == "quelle est"
+    assert voice_verbs["fr"]["VoiceQuery"] == ""  # VoiceQuery passe le slot tel quel

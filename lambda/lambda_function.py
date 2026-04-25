@@ -473,12 +473,12 @@ Ces verbes sont préfixés à la phrase reçue avant POST vers Jeedom — l'util
 doit avoir des interactions Jeedom configurées dans la même langue que son Echo.
 """
 VOICE_VERBS = {
-    "fr": {"VoiceLaunch": "activer", "VoiceTurnOn": "allumer",     "VoiceTurnOff": "éteindre",    "VoiceSet": "régler",   "VoiceQuery": "quelle est"},
-    "en": {"VoiceLaunch": "activate","VoiceTurnOn": "turn on",     "VoiceTurnOff": "turn off",    "VoiceSet": "set",      "VoiceQuery": "what is"},
-    "es": {"VoiceLaunch": "activar", "VoiceTurnOn": "encender",    "VoiceTurnOff": "apagar",      "VoiceSet": "ajustar",  "VoiceQuery": "cuál es"},
-    "de": {"VoiceLaunch": "starten", "VoiceTurnOn": "einschalten", "VoiceTurnOff": "ausschalten", "VoiceSet": "stellen",  "VoiceQuery": "wie ist"},
-    "it": {"VoiceLaunch": "attivare","VoiceTurnOn": "accendere",   "VoiceTurnOff": "spegnere",    "VoiceSet": "impostare","VoiceQuery": "qual è"},
-    "pt": {"VoiceLaunch": "ativar",  "VoiceTurnOn": "ligar",       "VoiceTurnOff": "desligar",    "VoiceSet": "definir",  "VoiceQuery": "qual é"},
+    "fr": {"VoiceLaunch": "activer", "VoiceTurnOn": "allumer",     "VoiceTurnOff": "éteindre",    "VoiceSet": "régler",   "VoiceQuery": ""},
+    "en": {"VoiceLaunch": "activate","VoiceTurnOn": "turn on",     "VoiceTurnOff": "turn off",    "VoiceSet": "set",      "VoiceQuery": ""},
+    "es": {"VoiceLaunch": "activar", "VoiceTurnOn": "encender",    "VoiceTurnOff": "apagar",      "VoiceSet": "ajustar",  "VoiceQuery": ""},
+    "de": {"VoiceLaunch": "starten", "VoiceTurnOn": "einschalten", "VoiceTurnOff": "ausschalten", "VoiceSet": "stellen",  "VoiceQuery": ""},
+    "it": {"VoiceLaunch": "attivare","VoiceTurnOn": "accendere",   "VoiceTurnOff": "spegnere",    "VoiceSet": "impostare","VoiceQuery": ""},
+    "pt": {"VoiceLaunch": "ativar",  "VoiceTurnOn": "ligar",       "VoiceTurnOff": "desligar",    "VoiceSet": "definir",  "VoiceQuery": ""},
 }
 
 
