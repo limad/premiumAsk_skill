@@ -37,9 +37,9 @@
 				"fr-FR": {
 					"description": "skill Ask pour AlexaPremium",
 					"examplePhrases": [
-						"Alexa, ouvre pose question",
-						"Alexa, ouvre skillAsk",
-						"aide"
+						"Alexa, ouvre jeedom",
+						"Alexa, demande à jeedom d'allumer la lumière du salon",
+						"Alexa, demande à jeedom de lancer le scénario matin"
 					],
 					"keywords": [],
 					"name": "AlexaPremium_Ask",
@@ -48,9 +48,9 @@
 				"fr-CA": {
 					"description": "skill Ask pour AlexaPremium",
 					"examplePhrases": [
-						"Alexa, ouvre pose question",
-						"Alexa, ouvre skillAsk",
-						"aide"
+						"Alexa, ouvre jeedom",
+						"Alexa, demande à jeedom d'allumer la lumière du salon",
+						"Alexa, demande à jeedom de lancer le scénario matin"
 					],
 					"keywords": [],
 					"name": "AlexaPremium_Ask",
