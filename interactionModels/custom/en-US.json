@@ -149,6 +149,18 @@
           ]
         },
         {
+          "name": "VoiceQuery",
+          "slots": [{ "name": "Command", "type": "AMAZON.SearchQuery" }],
+          "samples": [
+            "what is {Command}",
+            "what's {Command}",
+            "tell me {Command}",
+            "how much is {Command}",
+            "give me {Command}",
+            "read {Command}"
+          ]
+        },
+        {
           "name": "DisambiguationIntent",
           "slots": [{ "name": "Choice", "type": "AMAZON.NUMBER" }],
           "samples": [

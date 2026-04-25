@@ -147,6 +147,17 @@
           ]
         },
         {
+          "name": "VoiceQuery",
+          "slots": [{ "name": "Command", "type": "AMAZON.SearchQuery" }],
+          "samples": [
+            "cuál es {Command}",
+            "qué es {Command}",
+            "dime {Command}",
+            "cuánto vale {Command}",
+            "dame {Command}"
+          ]
+        },
+        {
           "name": "DisambiguationIntent",
           "slots": [{ "name": "Choice", "type": "AMAZON.NUMBER" }],
           "samples": [

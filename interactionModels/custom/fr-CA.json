@@ -189,6 +189,18 @@
             "règle {Command}",
             "configure {Command}"
           ]
+        },
+        {
+          "name": "VoiceQuery",
+          "slots": [{ "name": "Command", "type": "AMAZON.SearchQuery" }],
+          "samples": [
+            "quelle est {Command}",
+            "quel est {Command}",
+            "dis-moi {Command}",
+            "donne-moi {Command}",
+            "combien fait {Command}",
+            "c'est quoi {Command}"
+          ]
         }
       ],
       "types": []

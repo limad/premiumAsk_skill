@@ -473,12 +473,12 @@ Ces verbes sont préfixés à la phrase reçue avant POST vers Jeedom — l'util
 doit avoir des interactions Jeedom configurées dans la même langue que son Echo.
 """
 VOICE_VERBS = {
-    "fr": {"VoiceLaunch": "activer", "VoiceTurnOn": "allumer",  "VoiceTurnOff": "éteindre", "VoiceSet": "régler"},
-    "en": {"VoiceLaunch": "activate","VoiceTurnOn": "turn on",  "VoiceTurnOff": "turn off", "VoiceSet": "set"},
-    "es": {"VoiceLaunch": "activar", "VoiceTurnOn": "encender", "VoiceTurnOff": "apagar",   "VoiceSet": "ajustar"},
-    "de": {"VoiceLaunch": "starten", "VoiceTurnOn": "einschalten", "VoiceTurnOff": "ausschalten", "VoiceSet": "stellen"},
-    "it": {"VoiceLaunch": "attivare","VoiceTurnOn": "accendere",   "VoiceTurnOff": "spegnere",    "VoiceSet": "impostare"},
-    "pt": {"VoiceLaunch": "ativar",  "VoiceTurnOn": "ligar",       "VoiceTurnOff": "desligar",    "VoiceSet": "definir"},
+    "fr": {"VoiceLaunch": "activer", "VoiceTurnOn": "allumer",     "VoiceTurnOff": "éteindre",    "VoiceSet": "régler",   "VoiceQuery": "quelle est"},
+    "en": {"VoiceLaunch": "activate","VoiceTurnOn": "turn on",     "VoiceTurnOff": "turn off",    "VoiceSet": "set",      "VoiceQuery": "what is"},
+    "es": {"VoiceLaunch": "activar", "VoiceTurnOn": "encender",    "VoiceTurnOff": "apagar",      "VoiceSet": "ajustar",  "VoiceQuery": "cuál es"},
+    "de": {"VoiceLaunch": "starten", "VoiceTurnOn": "einschalten", "VoiceTurnOff": "ausschalten", "VoiceSet": "stellen",  "VoiceQuery": "wie ist"},
+    "it": {"VoiceLaunch": "attivare","VoiceTurnOn": "accendere",   "VoiceTurnOff": "spegnere",    "VoiceSet": "impostare","VoiceQuery": "qual è"},
+    "pt": {"VoiceLaunch": "ativar",  "VoiceTurnOn": "ligar",       "VoiceTurnOff": "desligar",    "VoiceSet": "definir",  "VoiceQuery": "qual é"},
 }
 
 
@@ -605,6 +605,15 @@ class VoiceSetIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         return _handle_voice_intent(handler_input, "VoiceSet")
+
+
+class VoiceQueryIntentHandler(AbstractRequestHandler):
+    """quelle est/what is/cuál es {X} → lecture valeur capteur Jeedom (locale-aware)."""
+    def can_handle(self, handler_input):
+        return is_intent_name("VoiceQuery")(handler_input)
+
+    def handle(self, handler_input):
+        return _handle_voice_intent(handler_input, "VoiceQuery")
 
 
 class YesIntentHandler(AbstractRequestHandler):
@@ -879,6 +888,7 @@ sb.add_request_handler(VoiceLaunchIntentHandler())
 sb.add_request_handler(VoiceTurnOnIntentHandler())
 sb.add_request_handler(VoiceTurnOffIntentHandler())
 sb.add_request_handler(VoiceSetIntentHandler())
+sb.add_request_handler(VoiceQueryIntentHandler())
 sb.add_request_handler(DisambiguationIntentHandler())
 sb.add_request_handler(YesIntentHandler())
 sb.add_request_handler(NoIntentHandler())

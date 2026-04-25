@@ -27,7 +27,7 @@ def voice_verbs():
     raise RuntimeError("VOICE_VERBS introuvable dans lambda_function.py")
 
 
-REQUIRED_INTENT_KEYS = {"VoiceLaunch", "VoiceTurnOn", "VoiceTurnOff", "VoiceSet"}
+REQUIRED_INTENT_KEYS = {"VoiceLaunch", "VoiceTurnOn", "VoiceTurnOff", "VoiceSet", "VoiceQuery"}
 EXPECTED_LOCALES = {"fr", "en", "es", "de", "it", "pt"}
 
 
@@ -64,3 +64,4 @@ def test_french_verbs_canonical():
     assert voice_verbs["fr"]["VoiceTurnOn"] == "allumer"
     assert voice_verbs["fr"]["VoiceTurnOff"] == "éteindre"
     assert voice_verbs["fr"]["VoiceSet"] == "régler"
+    assert voice_verbs["fr"]["VoiceQuery"] == "quelle est"
