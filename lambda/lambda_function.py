@@ -140,6 +140,25 @@ def _handle_response(handler, speak_out: Optional[str]):
     return handler.response_builder.response
 
 
+def _handle_qa_response(handler_input, jee, speak_out: Optional[str]):
+    """
+    Helper Q/A avec support dialog multi-tour.
+    Après un post_jee_event, jee.jee_state peut contenir une nouvelle question
+    (pollée par askResponse.php pendant 1.5s). Dans ce cas on garde la session
+    ouverte et on prononce la nouvelle question. Sinon flow standard.
+    """
+    if isinstance(jee.jee_state, QuestionState) and jee.jee_state.text:
+        # Multi-tour : nouvelle question Jeedom dans la même session Alexa
+        logger.info("Dialog multi-tour: enchaînement question")
+        return (handler_input.response_builder
+                .speak(jee.jee_state.text)
+                .ask(jee.jee_state.text)
+                .set_should_end_session(False)
+                .response)
+    # Flow standard : 1 réponse utilisateur → fin
+    return _handle_response(handler_input, speak_out)
+
+
 class JeeAsk:
     """Wrapper Jeedom — instance par invocation Lambda (pas de state partagé)."""
 
@@ -292,6 +311,31 @@ class JeeAsk:
                 return self.jee_state.text
             return ""
 
+        # ── Dialog multi-tour ────────────────────────────────────────────────
+        # Si askResponse.php a polled alexaAsk.json et trouvé une nouvelle
+        # question, on l'extrait et on remplace self.jee_state. Le handler
+        # appelant (Yes/No/String/Number/etc) inspectera self.jee_state après
+        # post_jee_event et pourra décider de garder la session ouverte.
+        next_q = None
+        try:
+            data = json.loads(response.data.decode("utf-8") or "{}")
+            next_q = data.get("next_question") if isinstance(data, dict) else None
+        except (json.JSONDecodeError, AttributeError):
+            pass
+
+        if isinstance(next_q, dict) and next_q.get("text"):
+            logger.info("Dialog multi-tour: nouvelle question reçue (event=%s)", next_q.get("event"))
+            self.jee_state = QuestionState(
+                event_id=next_q.get("event"),
+                suppress_confirmation=_string_to_bool(next_q.get("suppress_confirmation")),
+                text=next_q["text"],
+                deviceSerialNumber=next_q.get("deviceSerialNumber"),
+                textBrut=next_q.get("textBrut") or "",
+            )
+            # Retourne la question elle-même comme "réponse" — le handler la speak
+            return next_q["text"]
+
+        # Pas de question suivante : flow standard
         if not suppress:
             self.jee_state = None
             return self.language_strings.get(prompts.OKAY, "Ok")
@@ -542,7 +586,7 @@ class YesIntentHandler(AbstractRequestHandler):
         logger.info("Yes Intent")
         jee = JeeAsk(handler_input)
         speak_output = jee.post_jee_event(RESPONSE_YES, RESPONSE_YES)
-        return _handle_response(handler_input, speak_output)
+        return _handle_qa_response(handler_input, jee, speak_output)
 
 
 class NoIntentHandler(AbstractRequestHandler):
@@ -553,7 +597,7 @@ class NoIntentHandler(AbstractRequestHandler):
         logger.info("No Intent")
         jee = JeeAsk(handler_input)
         speak_output = jee.post_jee_event(RESPONSE_NO, RESPONSE_NO)
-        return _handle_response(handler_input, speak_output)
+        return _handle_qa_response(handler_input, jee, speak_output)
 
 
 class NumericIntentHandler(AbstractRequestHandler):
@@ -569,7 +613,7 @@ class NumericIntentHandler(AbstractRequestHandler):
             data = handler_input.attributes_manager.request_attributes.get("_", {})
             return _handle_response(handler_input, data.get(prompts.ERROR_CONFIG, "Valeur invalide"))
         speak_output = jee.post_jee_event(number, RESPONSE_NUMERIC)
-        return _handle_response(handler_input, speak_output)
+        return _handle_qa_response(handler_input, jee, speak_output)
 
 
 class StringIntentHandler(AbstractRequestHandler):
@@ -581,7 +625,7 @@ class StringIntentHandler(AbstractRequestHandler):
         jee = JeeAsk(handler_input)
         strings = get_slot_value(handler_input, "Strings") or ""
         speak_output = jee.post_jee_event(strings, RESPONSE_STRING)
-        return _handle_response(handler_input, speak_output)
+        return _handle_qa_response(handler_input, jee, speak_output)
 
 
 class SelectIntentHandler(AbstractRequestHandler):
@@ -600,7 +644,16 @@ class SelectIntentHandler(AbstractRequestHandler):
         jee.post_jee_event(selection, RESPONSE_SELECT)
         data = handler_input.attributes_manager.request_attributes.get("_", {})
         template = data.get(prompts.SELECTED, "{}")
-        return _handle_response(handler_input, template.format(selection))
+        # post_jee_event a peut-être MAJ jee.jee_state (multi-tour) — on speak la
+        # confirmation "Vous avez choisi X" puis si nouvelle question, on la chaîne
+        confirmation = template.format(selection)
+        if isinstance(jee.jee_state, QuestionState) and jee.jee_state.text:
+            return (handler_input.response_builder
+                    .speak(confirmation + " " + jee.jee_state.text)
+                    .ask(jee.jee_state.text)
+                    .set_should_end_session(False)
+                    .response)
+        return _handle_response(handler_input, confirmation)
 
 
 class DurationIntentHandler(AbstractRequestHandler):
@@ -618,7 +671,7 @@ class DurationIntentHandler(AbstractRequestHandler):
 
         seconds = _parse_iso_duration_seconds(duration)
         speak_output = jee.post_jee_event(seconds, RESPONSE_DURATION)
-        return _handle_response(handler_input, speak_output)
+        return _handle_qa_response(handler_input, jee, speak_output)
 
 
 class DateTimeIntentHandler(AbstractRequestHandler):
@@ -638,7 +691,7 @@ class DateTimeIntentHandler(AbstractRequestHandler):
 
         payload = json.dumps({**self._parse_date(date), **self._parse_time(time)})
         speak_output = jee.post_jee_event(payload, RESPONSE_DATE_TIME)
-        return _handle_response(handler_input, speak_output)
+        return _handle_qa_response(handler_input, jee, speak_output)
 
     @staticmethod
     def _parse_date(date: Optional[str]) -> dict:
