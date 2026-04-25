@@ -73,5 +73,11 @@ def _ensure_ask_sdk_mocks():
         USER_INITIATED = "USER_INITIATED"
     sys.modules["ask_sdk_model"].SessionEndedReason = _SessionEndedReason
 
+    # ask_sdk_model.interfaces.display — HintDirective / PlainTextHint
+    for p in ["ask_sdk_model.interfaces", "ask_sdk_model.interfaces.display"]:
+        _make_module(p)
+    sys.modules["ask_sdk_model.interfaces.display"].HintDirective = _Stub
+    sys.modules["ask_sdk_model.interfaces.display"].PlainTextHint = _Stub
+
 
 _ensure_ask_sdk_mocks()

@@ -234,3 +234,118 @@ class TestDisambiguationHandler:
             handler.handle(hi)
             MockJee.return_value.post_voice_command.assert_not_called()
         hi.response_builder.set_should_end_session.assert_called_with(False)
+
+
+# ────────────────────────────────────────────────────────────────────────────
+# post_voice_command — flag http_error
+# ────────────────────────────────────────────────────────────────────────────
+
+class TestPostVoiceCommandHttpError:
+    def _build_jee(self, lambda_mod):
+        hi = _make_handler_input()
+        jee = lambda_mod.JeeAsk(hi, fetch_question=False)
+        jee.language_strings = {"ERROR_CONFIG": "Erreur config.", "NO_MATCH": "Aucune commande."}
+        return jee
+
+    def test_http_error_flag_true_when_request_fails(self, lambda_mod):
+        jee = self._build_jee(lambda_mod)
+        jee._request = MagicMock(return_value=None)
+        result = jee.post_voice_command("allumer le salon")
+        assert result["http_error"] is True
+        assert result["matched"] is False
+
+    def test_http_error_flag_false_on_success(self, lambda_mod):
+        jee = self._build_jee(lambda_mod)
+        jee._request = MagicMock(return_value=_fake_response(
+            {"reply": "Salon allumé", "matched": True}
+        ))
+        result = jee.post_voice_command("allumer le salon")
+        assert result["http_error"] is False
+        assert result["matched"] is True
+
+    def test_http_error_flag_false_when_no_match(self, lambda_mod):
+        """Jeedom répond 200 mais matched=False → http_error=False (pas une erreur technique)."""
+        jee = self._build_jee(lambda_mod)
+        jee._request = MagicMock(return_value=_fake_response(
+            {"reply": "", "matched": False, "ambiguous": False}
+        ))
+        result = jee.post_voice_command("baisser les volets")
+        assert result["http_error"] is False
+        assert result["matched"] is False
+        assert result["reply"] == ""
+
+    def test_http_error_flag_true_on_invalid_json(self, lambda_mod):
+        jee = self._build_jee(lambda_mod)
+        bad_rsp = MagicMock()
+        bad_rsp.data = b"not json"
+        bad_rsp.status = 200
+        jee._request = MagicMock(return_value=bad_rsp)
+        result = jee.post_voice_command("test")
+        assert result["http_error"] is True
+
+
+# ────────────────────────────────────────────────────────────────────────────
+# _handle_voice_intent — branches http_error et no_match
+# ────────────────────────────────────────────────────────────────────────────
+
+class TestHandleVoiceIntentErrorBranches:
+    def test_http_error_speaks_error_config(self, lambda_mod):
+        hi = _make_handler_input(
+            slots={"Command": "les volets"},
+            locale="fr-FR",
+            request_attrs={"_": {"ERROR_CONFIG": "Jeedom injoignable.", "NO_MATCH": "Aucune commande."}},
+        )
+        with patch.object(lambda_mod, "JeeAsk") as MockJee:
+            MockJee.return_value.post_voice_command.return_value = {
+                "reply": "Jeedom injoignable.", "matched": False,
+                "ambiguous": False, "options": [], "http_error": True,
+            }
+            lambda_mod._handle_voice_intent(hi, "VoiceSet")
+        hi.response_builder.speak.assert_called_once_with("Jeedom injoignable.")
+
+    def test_no_match_speaks_no_match_message(self, lambda_mod):
+        hi = _make_handler_input(
+            slots={"Command": "les volets"},
+            locale="fr-FR",
+            request_attrs={"_": {"NO_MATCH": "Aucune commande trouvée.", "ERROR_CONFIG": "Erreur."}},
+        )
+        with patch.object(lambda_mod, "JeeAsk") as MockJee:
+            MockJee.return_value.post_voice_command.return_value = {
+                "reply": "", "matched": False,
+                "ambiguous": False, "options": [], "http_error": False,
+            }
+            lambda_mod._handle_voice_intent(hi, "VoiceSet")
+        hi.response_builder.speak.assert_called_once_with("Aucune commande trouvée.")
+
+    def test_no_match_ends_session(self, lambda_mod):
+        hi = _make_handler_input(
+            slots={"Command": "les volets"},
+            locale="fr-FR",
+            request_attrs={"_": {"NO_MATCH": "Aucune commande trouvée."}},
+        )
+        with patch.object(lambda_mod, "JeeAsk") as MockJee:
+            MockJee.return_value.post_voice_command.return_value = {
+                "reply": "", "matched": False,
+                "ambiguous": False, "options": [], "http_error": False,
+            }
+            lambda_mod._handle_voice_intent(hi, "VoiceSet")
+        hi.response_builder.set_should_end_session.assert_called_with(True)
+
+    def test_http_error_does_not_speak_no_match(self, lambda_mod):
+        """http_error=True → ERROR_CONFIG, pas NO_MATCH."""
+        hi = _make_handler_input(
+            slots={"Command": "les volets"},
+            locale="fr-FR",
+            request_attrs={"_": {
+                "ERROR_CONFIG": "Erreur config.",
+                "NO_MATCH": "Aucune commande.",
+            }},
+        )
+        with patch.object(lambda_mod, "JeeAsk") as MockJee:
+            MockJee.return_value.post_voice_command.return_value = {
+                "reply": "Erreur config.", "matched": False,
+                "ambiguous": False, "options": [], "http_error": True,
+            }
+            lambda_mod._handle_voice_intent(hi, "VoiceSet")
+        spoken = hi.response_builder.speak.call_args[0][0]
+        assert spoken != "Aucune commande."
