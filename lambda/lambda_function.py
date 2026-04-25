@@ -76,10 +76,11 @@ from schemas import QuestionState, QuestionStateError
 
 # ─── URLs pré-calculées ─────────────────────────────────────────────────────
 JEEDOM_URL = JEEDOM_URL.rstrip("/")
-QUESTION_URL = f"{JEEDOM_URL}/plugins/alexaapiv2/core/php/askQuestion.php?apikey={APIKEY}"
-RESPONSE_URL = f"{JEEDOM_URL}/plugins/alexaapiv2/core/php/askResponse.php?apikey={APIKEY}&command=reponseASK"
-LOG_URL      = f"{JEEDOM_URL}/plugins/alexaapiv2/core/php/askResponse.php?apikey={APIKEY}&command=log"
-VOICE_URL    = f"{JEEDOM_URL}/plugins/alexaapiv2/core/php/voiceControl.php?apikey={APIKEY}"
+QUESTION_URL = f"{JEEDOM_URL}/plugins/alexaapiv2/core/php/askQuestion.php"
+RESPONSE_URL = f"{JEEDOM_URL}/plugins/alexaapiv2/core/php/askResponse.php?command=reponseASK"
+LOG_URL      = f"{JEEDOM_URL}/plugins/alexaapiv2/core/php/askResponse.php?command=log"
+VOICE_URL    = f"{JEEDOM_URL}/plugins/alexaapiv2/core/php/voiceControl.php"
+# APIKEY est passée en header Authorization (cf. _get_headers ci-dessous), plus en query string
 
 # ─── Logging ────────────────────────────────────────────────────────────────
 logger = logging.getLogger(__name__)
@@ -167,9 +168,13 @@ class JeeAsk:
             return ""
 
     def _get_headers(self) -> dict:
-        """Headers HTTP communs. Authorization = token Alexa account-linking (peut être vide)."""
+        """
+        Headers HTTP communs. Authorization = APIKEY plugin Jeedom (Bearer).
+        Évite de mettre l'APIKEY en query string où elle finirait en clair dans
+        access_log Apache, Fail2ban, proxies divers.
+        """
         return {
-            "Authorization": f"Bearer {self.token or ''}",
+            "Authorization": f"Bearer {APIKEY}",
             "Content-Type": "application/json",
         }
 
@@ -295,35 +300,53 @@ class JeeAsk:
         return ""
 
     # ── voice control (mode direct — user commande Jeedom directement) ──────
-    def post_voice_command(self, query: str) -> str:
+    def post_voice_command(self, query: str, force_exact: bool = False) -> dict:
         """
         Envoie une commande vocale à Jeedom via voiceControl.php (interactQuery::tryToReply).
-        Retourne la réponse vocale à dire à l'utilisateur.
+        Retourne le dict complet : {reply, matched, ambiguous, options, query, ...}.
+        Inclut Voice ID Alexa si disponible → permet à Jeedom de filtrer par profil utilisateur.
+        Si force_exact=True, Jeedom skip la phase de disambiguation (l'user a déjà choisi).
         """
+        fallback = self.language_strings.get(prompts.ERROR_CONFIG, "Je n'ai pas compris.")
         if not query or not query.strip():
-            return self.language_strings.get(prompts.ERROR_CONFIG, "Je n'ai pas compris.")
+            return {"reply": fallback, "matched": False, "ambiguous": False, "options": []}
         device_sn = ""
+        person_id = ""
         try:
             device_sn = self.handler_input.request_envelope.context.system.device.device_id or ""
+        except AttributeError:
+            pass
+        try:
+            person = self.handler_input.request_envelope.context.system.person
+            if person:
+                person_id = person.person_id or ""
         except AttributeError:
             pass
         body = {
             "query": query.strip(),
             "deviceSerialNumber": device_sn,
+            "personId": person_id,
+            "forceExact": bool(force_exact),
             "code_version": CODE_VERS,
         }
         response = self._request("POST", VOICE_URL, body=body)
         if response is None:
-            return self.language_strings.get(prompts.ERROR_CONFIG, "Jeedom ne répond pas.")
+            return {"reply": self.language_strings.get(prompts.ERROR_CONFIG, "Jeedom ne répond pas."),
+                    "matched": False, "ambiguous": False, "options": []}
         try:
             data = json.loads(response.data.decode("utf-8") or "{}")
         except json.JSONDecodeError:
             logger.error("voiceControl: réponse JSON invalide")
-            return self.language_strings.get(prompts.ERROR_CONFIG, "Réponse invalide.")
-        reply = data.get("reply", "")
-        if not reply:
-            return self.language_strings.get(prompts.ERROR_CONFIG, "Je n'ai pas compris.")
-        return reply
+            return {"reply": self.language_strings.get(prompts.ERROR_CONFIG, "Réponse invalide."),
+                    "matched": False, "ambiguous": False, "options": []}
+        # Normalisation
+        return {
+            "reply":     data.get("reply") or fallback,
+            "matched":   bool(data.get("matched")),
+            "ambiguous": bool(data.get("ambiguous")),
+            "options":   data.get("options") or [],
+            "query":     data.get("query", query.strip()),
+        }
 
     # ── log push vers Jeedom ────────────────────────────────────────────────
     def post_jee_log(self, log_text: str, **kwargs):
@@ -378,64 +401,137 @@ class LaunchRequestHandler(AbstractRequestHandler):
                 builder.ask("")
             return builder.response
 
-        # Mode B : contrôle direct — prompt court et clair
-        # (on n'utilise pas WELCOME_MESSAGE qui est conçu pour le Q/A avec 2 placeholders)
+        # Mode B : contrôle direct — prompt court et clair (i18n via DIRECT_PROMPT)
         data = handler_input.attributes_manager.request_attributes.get("_", {})
-        prompt_txt = data.get("DIRECT_PROMPT", "Que puis-je pour vous ?")
+        prompt_txt = data.get(prompts.DIRECT_PROMPT, "Que puis-je pour vous ?")
         return handler_input.response_builder.speak(prompt_txt).ask(prompt_txt).response
 
 
-def _handle_voice_intent(handler_input, verb_prefix: str):
+"""
+Verbes Voice* par locale (langue Echo).
+Ces verbes sont préfixés à la phrase reçue avant POST vers Jeedom — l'utilisateur
+doit avoir des interactions Jeedom configurées dans la même langue que son Echo.
+"""
+VOICE_VERBS = {
+    "fr": {"VoiceLaunch": "activer", "VoiceTurnOn": "allumer",  "VoiceTurnOff": "éteindre", "VoiceSet": "régler"},
+    "en": {"VoiceLaunch": "activate","VoiceTurnOn": "turn on",  "VoiceTurnOff": "turn off", "VoiceSet": "set"},
+    "es": {"VoiceLaunch": "activar", "VoiceTurnOn": "encender", "VoiceTurnOff": "apagar",   "VoiceSet": "ajustar"},
+    "de": {"VoiceLaunch": "starten", "VoiceTurnOn": "einschalten", "VoiceTurnOff": "ausschalten", "VoiceSet": "stellen"},
+    "it": {"VoiceLaunch": "attivare","VoiceTurnOn": "accendere",   "VoiceTurnOff": "spegnere",    "VoiceSet": "impostare"},
+    "pt": {"VoiceLaunch": "ativar",  "VoiceTurnOn": "ligar",       "VoiceTurnOff": "desligar",    "VoiceSet": "definir"},
+}
+
+
+def _handle_voice_intent(handler_input, intent_name: str):
     """
     Handler générique pour les intents Voice* : reconstruit la phrase en préfixant
-    le verbe (qu'Alexa a consommé dans le carrier) puis forwarde à Jeedom.
+    le verbe (qu'Alexa a consommé dans le carrier), traduit selon la locale Echo,
+    puis forwarde à Jeedom. Si Jeedom détecte plusieurs interactions proches,
+    on stocke les options en session et on demande à l'utilisateur de choisir.
     """
     jee = JeeAsk(handler_input, fetch_question=False)
     query = (get_slot_value(handler_input, "Command") or "").strip()
     if not query:
         data = handler_input.attributes_manager.request_attributes.get("_", {})
         return _handle_response(handler_input, data.get(prompts.ERROR_CONFIG, "Je n'ai pas compris."))
-    # Reconstruit "allumer le séjour" depuis verbe_prefix="allumer" + slot="le séjour"
-    full_query = f"{verb_prefix} {query}"
-    logger.info("VoiceCommand: %s", full_query)
-    reply = jee.post_voice_command(full_query)
-    return handler_input.response_builder.speak(reply).set_should_end_session(True).response
+    # Verbe locale-aware (fallback fr si locale inconnue)
+    try:
+        locale_short = (handler_input.request_envelope.request.locale or "fr")[:2].lower()
+    except AttributeError:
+        locale_short = "fr"
+    verb = VOICE_VERBS.get(locale_short, VOICE_VERBS["fr"]).get(intent_name, "")
+    full_query = f"{verb} {query}".strip()
+    logger.info("VoiceCommand[%s]: %s", locale_short, full_query)
+    result = jee.post_voice_command(full_query)
+
+    # ── Disambiguation : 2+ matches proches → on stocke et on demande ────────
+    if result.get("ambiguous") and result.get("options"):
+        sess = handler_input.attributes_manager.session_attributes
+        sess["pending_voice_options"] = result["options"]
+        logger.info("VoiceCommand[%s]: ambiguous (%d options) → eliciting choice",
+                    locale_short, len(result["options"]))
+        return (handler_input.response_builder
+                .speak(result["reply"])
+                .ask(result["reply"])
+                .set_should_end_session(False)
+                .response)
+
+    return handler_input.response_builder.speak(result["reply"]).set_should_end_session(True).response
+
+
+class DisambiguationIntentHandler(AbstractRequestHandler):
+    """
+    Active si l'utilisateur a reçu un prompt "1 : phrase A, 2 : phrase B, lequel ?"
+    et répond "le deuxième" ou "deux". Slot Choice = AMAZON.NUMBER.
+    Re-poste la phrase choisie à Jeedom avec forceExact=true (skip re-disambiguation).
+    """
+    def can_handle(self, handler_input):
+        return is_intent_name("DisambiguationIntent")(handler_input)
+
+    def handle(self, handler_input):
+        sess = handler_input.attributes_manager.session_attributes
+        options = sess.get("pending_voice_options") or []
+        data = handler_input.attributes_manager.request_attributes.get("_", {})
+
+        # Plus d'options en attente → l'user a parlé hors contexte
+        if not options:
+            msg = data.get(prompts.ERROR_CONFIG, "Je n'ai pas de choix en attente.")
+            return handler_input.response_builder.speak(msg).set_should_end_session(True).response
+
+        choice_raw = (get_slot_value(handler_input, "Choice") or "").strip()
+        try:
+            idx = int(choice_raw) - 1
+        except (ValueError, TypeError):
+            idx = -1
+        if idx < 0 or idx >= len(options):
+            msg = "Choix invalide. " + (sess.get("last_disambig_prompt") or "Reformule.")
+            return (handler_input.response_builder.speak(msg).ask(msg)
+                    .set_should_end_session(False).response)
+
+        # Nettoie la session avant relance
+        chosen = options[idx]
+        sess.pop("pending_voice_options", None)
+
+        jee = JeeAsk(handler_input, fetch_question=False)
+        logger.info("DisambiguationIntent: chosen #%d → '%s'", idx + 1, chosen)
+        result = jee.post_voice_command(chosen, force_exact=True)
+        return handler_input.response_builder.speak(result["reply"]).set_should_end_session(True).response
 
 
 class VoiceLaunchIntentHandler(AbstractRequestHandler):
-    """lance/active/démarre/exécute/déclenche {X} → Jeedom : 'activer X'."""
+    """lance/launch/lanza/etc {X} → 'activer X' (locale-aware)."""
     def can_handle(self, handler_input):
         return is_intent_name("VoiceLaunch")(handler_input)
 
     def handle(self, handler_input):
-        return _handle_voice_intent(handler_input, "activer")
+        return _handle_voice_intent(handler_input, "VoiceLaunch")
 
 
 class VoiceTurnOnIntentHandler(AbstractRequestHandler):
-    """allume/ouvre/monte {X} → Jeedom : 'allumer X'."""
+    """allume/turn on/enciende/etc {X} → 'allumer X' (locale-aware)."""
     def can_handle(self, handler_input):
         return is_intent_name("VoiceTurnOn")(handler_input)
 
     def handle(self, handler_input):
-        return _handle_voice_intent(handler_input, "allumer")
+        return _handle_voice_intent(handler_input, "VoiceTurnOn")
 
 
 class VoiceTurnOffIntentHandler(AbstractRequestHandler):
-    """éteins/ferme/arrête/coupe/descends {X} → Jeedom : 'éteindre X'."""
+    """éteins/turn off/apaga/etc {X} → 'éteindre X' (locale-aware)."""
     def can_handle(self, handler_input):
         return is_intent_name("VoiceTurnOff")(handler_input)
 
     def handle(self, handler_input):
-        return _handle_voice_intent(handler_input, "éteindre")
+        return _handle_voice_intent(handler_input, "VoiceTurnOff")
 
 
 class VoiceSetIntentHandler(AbstractRequestHandler):
-    """mets/fais/règle/configure {X} → Jeedom : 'régler X'."""
+    """mets/set/pon/etc {X} → 'régler X' (locale-aware)."""
     def can_handle(self, handler_input):
         return is_intent_name("VoiceSet")(handler_input)
 
     def handle(self, handler_input):
-        return _handle_voice_intent(handler_input, "régler")
+        return _handle_voice_intent(handler_input, "VoiceSet")
 
 
 class YesIntentHandler(AbstractRequestHandler):
@@ -579,6 +675,23 @@ class DateTimeIntentHandler(AbstractRequestHandler):
         return out
 
 
+class RepeatIntentHandler(AbstractRequestHandler):
+    """User dit 'répète' / 'redis' / 'pardon' → on reprononce la dernière question Ask.
+    Si pas de question en cache, fallback prompt direct."""
+    def can_handle(self, handler_input):
+        return is_intent_name("AMAZON.RepeatIntent")(handler_input)
+
+    def handle(self, handler_input):
+        logger.info("Repeat Intent")
+        jee = JeeAsk(handler_input)  # re-fetch alexaAsk.json
+        if isinstance(jee.jee_state, QuestionState) and jee.jee_state.text:
+            return handler_input.response_builder.speak(jee.jee_state.text).ask("").response
+        # Pas de question en cache → prompt direct
+        data = handler_input.attributes_manager.request_attributes.get("_", {})
+        prompt_txt = data.get(prompts.DIRECT_PROMPT, "Que puis-je pour vous ?")
+        return handler_input.response_builder.speak(prompt_txt).ask(prompt_txt).response
+
+
 class HelpIntentHandler(AbstractRequestHandler):
     """Répond à AMAZON.HelpIntent avec le message d'aide localisé."""
     def can_handle(self, handler_input):
@@ -684,6 +797,7 @@ sb.add_request_handler(VoiceLaunchIntentHandler())
 sb.add_request_handler(VoiceTurnOnIntentHandler())
 sb.add_request_handler(VoiceTurnOffIntentHandler())
 sb.add_request_handler(VoiceSetIntentHandler())
+sb.add_request_handler(DisambiguationIntentHandler())
 sb.add_request_handler(YesIntentHandler())
 sb.add_request_handler(NoIntentHandler())
 sb.add_request_handler(StringIntentHandler())
@@ -691,6 +805,7 @@ sb.add_request_handler(SelectIntentHandler())
 sb.add_request_handler(NumericIntentHandler())
 sb.add_request_handler(DurationIntentHandler())
 sb.add_request_handler(DateTimeIntentHandler())
+sb.add_request_handler(RepeatIntentHandler())
 sb.add_request_handler(HelpIntentHandler())
 sb.add_request_handler(CancelOrStopIntentHandler())
 sb.add_request_handler(FallbackHandler())

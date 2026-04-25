@@ -33,12 +33,10 @@
             "ok",
             "okay",
             "bien sûr",
-            "absolument",
-            "c'est ça",
             "exact",
             "affirmatif",
-            "carrément",
-            "tout à fait"
+            "tout à fait",
+            "valide"
           ]
         },
         {
@@ -50,8 +48,18 @@
             "négatif",
             "jamais",
             "non merci",
-            "absolument pas",
-            "pas question"
+            "pas question",
+            "annule"
+          ]
+        },
+        {
+          "name": "AMAZON.RepeatIntent",
+          "samples": [
+            "répète",
+            "redis",
+            "encore",
+            "j'ai pas compris",
+            "pardon"
           ]
         },
         {

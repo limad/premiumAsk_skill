@@ -11,7 +11,8 @@
     "SELECTED": "You selected {}",
     "SKILL_NAME": "Jeedom custom actions",
     "STOP_MESSAGE": "Goodbye!",
-    "WELCOME_MESSAGE": "Welcome to {}. Input text is: {}"
+    "WELCOME_MESSAGE": "Welcome to {}. Input text is: {}",
+    "DIRECT_PROMPT": "What can I do for you?"
   },
   "de": {
     "ERROR_401": "Ich habe scheinbar keine Berechtigungen für die verbindung zu Jeedom. Bitte prüfe deinen H A Benutzer oder Access Token.",
@@ -25,7 +26,8 @@
     "SELECTED": "Du hast {} gewählt",
     "SKILL_NAME": "Jeedom custom actions",
     "STOP_MESSAGE": "Machs gut!",
-    "WELCOME_MESSAGE": "Willkommen bei {}. Der input text ist: {}"
+    "WELCOME_MESSAGE": "Willkommen bei {}. Der input text ist: {}",
+    "DIRECT_PROMPT": "Was kann ich für Sie tun?"
   },
   "fr": {
     "ERROR_401": "Il semblerait que je ne sois pas authorisée à accéder à Jeedom, veuillez verifier la configuration de votre skill, la clé API et essayez à nouveau.",
@@ -39,7 +41,8 @@
     "SELECTED": "Vous avez choisi {}",
     "SKILL_NAME": "Jeedom custom actions",
     "STOP_MESSAGE": "Au revoir!",
-    "WELCOME_MESSAGE": "Bienvenue sur {}. Le champ texte est: {}"
+    "WELCOME_MESSAGE": "Bienvenue sur {}. Le champ texte est: {}",
+    "DIRECT_PROMPT": "Que puis-je pour vous ?"
   },
   "it": {
     "ERROR_401": "Problema con le autorizzazioni di accesso ad Jeedom: controllare l'account collegato o eventuali token utilizzati e riprovare",
@@ -53,7 +56,8 @@
     "SELECTED": "Hai selezionato {}",
     "SKILL_NAME": "Jeedom Austom Actions",
     "STOP_MESSAGE": "A presto!",
-    "WELCOME_MESSAGE": "Benvenuto su {}. Il testo specificato e': {}"
+    "WELCOME_MESSAGE": "Benvenuto su {}. Il testo specificato e': {}",
+    "DIRECT_PROMPT": "Cosa posso fare per te?"
   },
   "pt": {
     "ERROR_401": "Parece que eu não estou autorizada a acessar seu Jeedom. Verifique as credenciais e tente novamente.",
@@ -67,7 +71,8 @@
     "SELECTED": "Você escolheu {}",
     "SKILL_NAME": "Jeedom, ações customizadas",
     "STOP_MESSAGE": "Tchau!",
-    "WELCOME_MESSAGE": "Bem vindo ao {}. A entrada de texto é: {}"
+    "WELCOME_MESSAGE": "Bem vindo ao {}. A entrada de texto é: {}",
+    "DIRECT_PROMPT": "O que posso fazer por você?"
   },
   "es": {
     "ERROR_401": "Parece que no tengo permisos para acceder a Jeedom. Por favor, comprueba el enlace de cuenta o el token de acceso y vuelve a intentarlo.",
@@ -81,7 +86,8 @@
     "SELECTED": "Has seleccionado {}",
     "SKILL_NAME": "Jeedom custom actions",
     "STOP_MESSAGE": "Adiós!",
-    "WELCOME_MESSAGE": "Bienvenido a {}. El texto de entrada es: {}"
+    "WELCOME_MESSAGE": "Bienvenido a {}. El texto de entrada es: {}",
+    "DIRECT_PROMPT": "¿En qué puedo ayudarle?"
   },
   "fr-FR": {
     "SKILL_NAME": "Actionable notifications"
