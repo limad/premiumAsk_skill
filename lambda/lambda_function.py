@@ -545,13 +545,14 @@ class DisambiguationIntentHandler(AbstractRequestHandler):
         sess = handler_input.attributes_manager.session_attributes
         options = sess.get("pending_voice_options") or []
         data = handler_input.attributes_manager.request_attributes.get("_", {})
+        choice_raw = (get_slot_value(handler_input, "Choice") or "").strip()
 
         # Plus d'options en attente → l'user a parlé hors contexte
         if not options:
-            msg = data.get(prompts.ERROR_CONFIG, "Je n'ai pas de choix en attente.")
+            logger.info("DisambiguationIntent sans choix en attente (choice=%s)", choice_raw)
+            msg = data.get(prompts.NO_MATCH, "Aucune commande trouvée pour cette demande.")
             return handler_input.response_builder.speak(msg).set_should_end_session(True).response
 
-        choice_raw = (get_slot_value(handler_input, "Choice") or "").strip()
         try:
             idx = int(choice_raw) - 1
         except (ValueError, TypeError):

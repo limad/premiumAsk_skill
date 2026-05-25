@@ -218,9 +218,11 @@ class TestDisambiguationHandler:
             intent_name="DisambiguationIntent",
             slots={"Choice": "1"},
             session_attrs={},  # pas d'options en attente
+            request_attrs={"_": {"NO_MATCH": "Aucune commande."}},
         )
         handler = lambda_mod.DisambiguationIntentHandler()
         handler.handle(hi)
+        hi.response_builder.speak.assert_called_with("Aucune commande.")
         hi.response_builder.set_should_end_session.assert_called_with(True)
 
     def test_invalid_choice_value_re_prompts(self, lambda_mod):

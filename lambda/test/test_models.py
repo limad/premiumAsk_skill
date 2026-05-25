@@ -116,6 +116,8 @@ def test_disambiguation_intent_uses_amazon_number(locale):
     # Au moins un sample doit utiliser le slot
     assert any("{Choice}" in s for s in intent["samples"]), \
         f"{locale}: aucun sample utilisant {{Choice}}"
+    assert "{Choice}" not in intent["samples"], \
+        f"{locale}: sample nu {{Choice}} trop large, risque de faux match"
 
 
 @pytest.mark.parametrize("locale", SUPPORTED_LOCALES)

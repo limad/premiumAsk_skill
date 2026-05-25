@@ -164,7 +164,6 @@
           "name": "DisambiguationIntent",
           "slots": [{ "name": "Choice", "type": "AMAZON.NUMBER" }],
           "samples": [
-            "{Choice}",
             "the {Choice}",
             "number {Choice}",
             "option {Choice}",
