@@ -1,0 +1,44 @@
+name: Skill CI
+
+on:
+  push:
+    branches: [beta]
+  pull_request:
+    branches: [beta]
+
+jobs:
+  test:
+    name: Tests Python Lambda
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.8'   # même version que le runtime Lambda Alexa-hosted
+
+      - name: Installer dépendances
+        run: pip install "ask-sdk~=1.19.0" pytest
+
+      - name: Lint syntaxe Python
+        run: python -m py_compile lambda/lambda_function.py && echo "Syntaxe OK"
+
+      - name: Tests unitaires
+        run: python -m pytest lambda/test/ -v --tb=short
+
+      - name: Vérifier version.txt présente
+        run: test -f version.txt && echo "version=$(cat version.txt)" || (echo "ERREUR: version.txt manquant" && exit 1)
+
+  validate-model:
+    name: Valider modèles d'interaction
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Vérifier JSON valide pour chaque locale
+        run: |
+          for f in interactionModels/custom/*.json; do
+            python3 -c "import json,sys; json.load(open('$f'))" && echo "✓ $f" || (echo "✗ $f invalide" && exit 1)
+          done
