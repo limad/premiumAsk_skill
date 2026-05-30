@@ -1,224 +1,259 @@
 {
-  "interactionModel": {
-    "languageModel": {
-      "invocationName": "jeedom",
-      "intents": [
-        {
-          "name": "AMAZON.CancelIntent",
-          "samples": []
-        },
-        {
-          "name": "AMAZON.HelpIntent",
-          "samples": []
-        },
-        {
-          "name": "AMAZON.StopIntent",
-          "samples": []
-        },
-        {
-          "name": "AMAZON.NavigateHomeIntent",
-          "samples": []
-        },
-        {
-          "name": "AMAZON.FallbackIntent",
-          "samples": []
-        },
-        {
-          "name": "AMAZON.YesIntent",
-          "samples": [
-            "oui",
-            "ouais",
-            "ouaip",
-            "d'accord",
-            "ok",
-            "okay",
-            "bien sûr",
-            "exact",
-            "affirmatif",
-            "tout à fait",
-            "valide"
-          ]
-        },
-        {
-          "name": "AMAZON.NoIntent",
-          "samples": [
-            "non",
-            "nan",
-            "pas du tout",
-            "négatif",
-            "jamais",
-            "non merci",
-            "pas question",
-            "annule"
-          ]
-        },
-        {
-          "name": "AMAZON.RepeatIntent",
-          "samples": [
-            "répète",
-            "redis",
-            "encore",
-            "j'ai pas compris",
-            "pardon"
-          ]
-        },
-        {
-          "name": "String",
-          "slots": [
-            {
-              "name": "Strings",
-              "type": "AMAZON.SearchQuery"
-            }
-          ],
-          "samples": [
-            "c'est {Strings}",
-            "je dis {Strings}",
-            "la réponse est {Strings}",
-            "ma réponse est {Strings}",
-            "dis {Strings}"
-          ]
-        },
-        {
-          "name": "Select",
-          "slots": [
-            {
-              "name": "Selections",
-              "type": "AMAZON.SearchQuery"
-            }
-          ],
-          "samples": [
-            "le {Selections}",
-            "la {Selections}",
-            "les {Selections}",
-            "je choisis {Selections}",
-            "sélectionne {Selections}",
-            "prends {Selections}",
-            "choisir {Selections}"
-          ]
-        },
-        {
-          "name": "Number",
-          "slots": [
-            {
-              "name": "Numbers",
-              "type": "AMAZON.NUMBER"
-            }
-          ],
-          "samples": [
-            "{Numbers}",
-            "c'est {Numbers}",
-            "le nombre {Numbers}",
-            "le numéro {Numbers}"
-          ]
-        },
-        {
-          "name": "Duration",
-          "slots": [
-            {
-              "name": "Durations",
-              "type": "AMAZON.DURATION"
-            }
-          ],
-          "samples": [
-            "{Durations}",
-            "pendant {Durations}",
-            "pour {Durations}",
-            "durant {Durations}",
-            "pour une durée de {Durations}"
-          ]
-        },
-        {
-          "name": "Date",
-          "slots": [
-            {
-              "name": "Dates",
-              "type": "AMAZON.DATE"
-            },
-            {
-              "name": "Times",
-              "type": "AMAZON.TIME"
-            }
-          ],
-          "samples": [
-            "{Dates}",
-            "à {Times}",
-            "le {Dates}",
-            "pour le {Dates}",
-            "pour {Times}",
-            "{Dates} à {Times}",
-            "le {Dates} à {Times}"
-          ]
-        },
-        {
-          "name": "VoiceLaunch",
-          "slots": [{ "name": "Command", "type": "AMAZON.SearchQuery" }],
-          "samples": [
-            "lance {Command}",
-            "active {Command}",
-            "démarre {Command}",
-            "exécute {Command}",
-            "déclenche {Command}"
-          ]
-        },
-        {
-          "name": "VoiceTurnOn",
-          "slots": [{ "name": "Command", "type": "AMAZON.SearchQuery" }],
-          "samples": [
-            "allume {Command}",
-            "ouvre {Command}",
-            "monte {Command}"
-          ]
-        },
-        {
-          "name": "VoiceTurnOff",
-          "slots": [{ "name": "Command", "type": "AMAZON.SearchQuery" }],
-          "samples": [
-            "éteins {Command}",
-            "ferme {Command}",
-            "arrête {Command}",
-            "coupe {Command}",
-            "descends {Command}"
-          ]
-        },
-        {
-          "name": "VoiceSet",
-          "slots": [{ "name": "Command", "type": "AMAZON.SearchQuery" }],
-          "samples": [
-            "mets {Command}",
-            "fais {Command}",
-            "règle {Command}",
-            "configure {Command}"
-          ]
-        },
-        {
-          "name": "VoiceQuery",
-          "slots": [{ "name": "Command", "type": "AMAZON.SearchQuery" }],
-          "samples": [
-            "quelle est {Command}",
-            "quel est {Command}",
-            "dis-moi {Command}",
-            "donne-moi {Command}",
-            "combien fait {Command}",
-            "c'est quoi {Command}"
-          ]
-        },
-        {
-          "name": "DisambiguationIntent",
-          "slots": [{ "name": "Choice", "type": "AMAZON.NUMBER" }],
-          "samples": [
+    "interactionModel": {
+        "languageModel": {
+            "invocationName": "jeedom",
+            "intents": [
+                {
+                    "name": "AMAZON.CancelIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.HelpIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.StopIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.NavigateHomeIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.FallbackIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.YesIntent",
+                    "samples": [
+                        "oui",
+                        "ouais",
+                        "ouaip",
+                        "d'accord",
+                        "ok",
+                        "okay",
+                        "bien sûr",
+                        "exact",
+                        "affirmatif",
+                        "tout à fait",
+                        "valide"
+                    ]
+                },
+                {
+                    "name": "AMAZON.NoIntent",
+                    "samples": [
+                        "non",
+                        "nan",
+                        "pas du tout",
+                        "négatif",
+                        "jamais",
+                        "non merci",
+                        "pas question",
+                        "annule"
+                    ]
+                },
+                {
+                    "name": "AMAZON.RepeatIntent",
+                    "samples": [
+                        "répète",
+                        "redis",
+                        "encore",
+                        "j'ai pas compris",
+                        "pardon"
+                    ]
+                },
+                {
+                    "name": "String",
+                    "slots": [
+                        {
+                            "name": "Strings",
+                            "type": "AMAZON.SearchQuery"
+                        }
+                    ],
+                    "samples": [
+                        "c'est {Strings}",
+                        "je dis {Strings}",
+                        "la réponse est {Strings}",
+                        "ma réponse est {Strings}",
+                        "dis {Strings}"
+                    ]
+                },
+                {
+                    "name": "Select",
+                    "slots": [
+                        {
+                            "name": "Selections",
+                            "type": "AMAZON.SearchQuery"
+                        }
+                    ],
+                    "samples": [
+                        "le {Selections}",
+                        "la {Selections}",
+                        "les {Selections}",
+                        "je choisis {Selections}",
+                        "sélectionne {Selections}",
+                        "prends {Selections}",
+                        "choisir {Selections}"
+                    ]
+                },
+                {
+                    "name": "Number",
+                    "slots": [
+                        {
+                            "name": "Numbers",
+                            "type": "AMAZON.NUMBER"
+                        }
+                    ],
+                    "samples": [
+                        "{Numbers}",
+                        "c'est {Numbers}",
+                        "le nombre {Numbers}",
+                        "le numéro {Numbers}"
+                    ]
+                },
+                {
+                    "name": "Duration",
+                    "slots": [
+                        {
+                            "name": "Durations",
+                            "type": "AMAZON.DURATION"
+                        }
+                    ],
+                    "samples": [
+                        "{Durations}",
+                        "pendant {Durations}",
+                        "pour {Durations}",
+                        "durant {Durations}",
+                        "pour une durée de {Durations}"
+                    ]
+                },
+                {
+                    "name": "Date",
+                    "slots": [
+                        {
+                            "name": "Dates",
+                            "type": "AMAZON.DATE"
+                        },
+                        {
+                            "name": "Times",
+                            "type": "AMAZON.TIME"
+                        }
+                    ],
+                    "samples": [
+                        "{Dates}",
+                        "à {Times}",
+                        "le {Dates}",
+                        "pour le {Dates}",
+                        "pour {Times}",
+                        "{Dates} à {Times}",
+                        "le {Dates} à {Times}"
+                    ]
+                },
+                {
+                    "name": "VoiceLaunch",
+                    "slots": [
+                        {
+                            "name": "Command",
+                            "type": "AMAZON.SearchQuery"
+                        }
+                    ],
+                    "samples": [
+                        "lance {Command}",
+                        "active {Command}",
+                        "démarre {Command}",
+                        "exécute {Command}",
+                        "déclenche {Command}"
+                    ]
+                },
+                {
+                    "name": "VoiceTurnOn",
+                    "slots": [
+                        {
+                            "name": "Command",
+                            "type": "AMAZON.SearchQuery"
+                        }
+                    ],
+                    "samples": [
+                        "allume {Command}",
+                        "ouvre {Command}",
+                        "monte {Command}"
+                    ]
+                },
+                {
+                    "name": "VoiceTurnOff",
+                    "slots": [
+                        {
+                            "name": "Command",
+                            "type": "AMAZON.SearchQuery"
+                        }
+                    ],
+                    "samples": [
+                        "éteins {Command}",
+                        "ferme {Command}",
+                        "arrête {Command}",
+                        "coupe {Command}",
+                        "descends {Command}"
+                    ]
+                },
+                {
+                    "name": "VoiceSet",
+                    "slots": [
+                        {
+                            "name": "Command",
+                            "type": "AMAZON.SearchQuery"
+                        }
+                    ],
+                    "samples": [
+                        "mets {Command}",
+                        "fais {Command}",
+                        "règle {Command}",
+                        "configure {Command}"
+                    ]
+                },
+                {
+                    "name": "VoiceQuery",
+                    "slots": [
+                        {
+                            "name": "Command",
+                            "type": "AMAZON.SearchQuery"
+                        }
+                    ],
+                    "samples": [
+                        "quelle est {Command}",
+                        "quel est {Command}",
+                        "quelle est l' {Command}",
+                        "quel est l' {Command}",
+                        "dis-moi {Command}",
+                        "dis-moi l' {Command}",
+                        "donne-moi {Command}",
+                        "donne-moi l' {Command}",
+                        "combien fait {Command}",
+                        "c'est quoi {Command}",
+                        "c'est quoi l' {Command}"
+                    ]
+                },
+                {
+                    "name": "DisambiguationIntent",
+                    "slots": [
+                        {
+                            "name": "Choice",
+                            "type": "AMAZON.NUMBER"
+                        }
+                    ],
+                    "samples": [
             "le {Choice}",
-            "la {Choice}",
-            "numéro {Choice}",
-            "le numéro {Choice}",
-            "option {Choice}",
-            "choix {Choice}",
-            "c'est le {Choice}",
-            "je veux le {Choice}",
-            "je choisis le {Choice}"
-          ]
+                        "la {Choice}",
+                        "numéro {Choice}",
+                        "le numéro {Choice}",
+                        "option {Choice}",
+                        "choix {Choice}",
+                        "c'est le {Choice}",
+                        "je veux le {Choice}",
+                        "je choisis le {Choice}"
+                    ]
+                }
+            ],
+            "types": []
         }
-      ],
-      "types": []
     }
-  }
 }

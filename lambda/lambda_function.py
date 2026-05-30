@@ -80,7 +80,7 @@ JEEDOM_URL = JEEDOM_URL.rstrip("/")
 QUESTION_URL = f"{JEEDOM_URL}/plugins/alexaapiv2/core/php/askQuestion.php"
 RESPONSE_URL = f"{JEEDOM_URL}/plugins/alexaapiv2/core/php/askResponse.php?command=reponseASK"
 LOG_URL      = f"{JEEDOM_URL}/plugins/alexaapiv2/core/php/askResponse.php?command=log"
-VOICE_URL    = f"{JEEDOM_URL}/plugins/alexaapiv2/core/php/voiceControl.php"
+VOICE_ROUTER_URL = f"{JEEDOM_URL}/plugins/alexaapiv2/core/php/voiceRouter.php"
 # APIKEY est passée en header Authorization (cf. _get_headers ci-dessous), plus en query string
 
 # ─── Logging ────────────────────────────────────────────────────────────────
@@ -199,12 +199,12 @@ class JeeAsk:
 
     def _get_headers(self) -> dict:
         """
-        Headers HTTP communs. Authorization = APIKEY plugin Jeedom (Bearer).
-        Évite de mettre l'APIKEY en query string où elle finirait en clair dans
-        access_log Apache, Fail2ban, proxies divers.
+        Headers HTTP communs. Authorization = token Jeedom (Bearer).
+        Priorité : token OAuth Account Linking (self.token) → APIKEY statique (fallback).
+        Évite de mettre le token en query string où il finirait en clair dans les logs.
         """
         return {
-            "Authorization": f"Bearer {APIKEY}",
+            "Authorization": f"Bearer {self.token or APIKEY}",
             "Content-Type": "application/json",
         }
 
@@ -357,14 +357,14 @@ class JeeAsk:
     # ── voice control (mode direct — user commande Jeedom directement) ──────
     def post_voice_command(self, query: str, force_exact: bool = False) -> dict:
         """
-        Envoie une commande vocale à Jeedom via voiceControl.php (interactQuery::tryToReply).
-        Retourne le dict complet : {reply, matched, ambiguous, options, query, ...}.
-        Inclut Voice ID Alexa si disponible → permet à Jeedom de filtrer par profil utilisateur.
-        Si force_exact=True, Jeedom skip la phase de disambiguation (l'user a déjà choisi).
+        Envoie la commande au routeur vocal Jeedom (voiceRouter.php).
+        Le routeur décide lui-même entre voiceControl et voiceQuery selon la config
+        Jeedom en temps réel — plus de redéploiement Lambda pour changer de mode.
         """
-        fallback = self.language_strings.get(prompts.ERROR_CONFIG, "Je n'ai pas compris.")
+        fallback = self.language_strings.get(prompts.NO_MATCH, "Je n'ai pas compris.")
         if not query or not query.strip():
             return {"reply": fallback, "matched": False, "ambiguous": False, "options": []}
+
         device_sn = ""
         person_id = ""
         try:
@@ -377,6 +377,7 @@ class JeeAsk:
                 person_id = person.person_id or ""
         except AttributeError:
             pass
+
         body = {
             "query": query.strip(),
             "deviceSerialNumber": device_sn,
@@ -384,17 +385,18 @@ class JeeAsk:
             "forceExact": bool(force_exact),
             "code_version": CODE_VERS,
         }
-        response = self._request("POST", VOICE_URL, body=body)
+        response = self._request("POST", VOICE_ROUTER_URL, body=body)
         if response is None:
             return {"reply": self.language_strings.get(prompts.ERROR_CONFIG, "Jeedom ne répond pas."),
                     "matched": False, "ambiguous": False, "options": [], "http_error": True}
         try:
             data = json.loads(response.data.decode("utf-8") or "{}")
         except json.JSONDecodeError:
-            logger.error("voiceControl: réponse JSON invalide")
+            logger.error("voiceRouter: réponse JSON invalide")
             return {"reply": self.language_strings.get(prompts.ERROR_CONFIG, "Réponse invalide."),
                     "matched": False, "ambiguous": False, "options": [], "http_error": True}
-        # Normalisation — http_error=False : Jeedom a répondu, matched indique si une interaction a été trouvée
+        logger.info("voiceRouter: route=%s matched=%s elapsed=%sms",
+                    data.get("route"), data.get("matched"), data.get("elapsed_ms"))
         return {
             "reply":      data.get("reply") or "",
             "matched":    bool(data.get("matched")),
@@ -493,7 +495,7 @@ def _handle_voice_intent(handler_input, intent_name: str):
     query = (get_slot_value(handler_input, "Command") or "").strip()
     if not query:
         data = handler_input.attributes_manager.request_attributes.get("_", {})
-        return _handle_response(handler_input, data.get(prompts.ERROR_CONFIG, "Je n'ai pas compris."))
+        return _handle_response(handler_input, data.get(prompts.NO_MATCH, "Je n'ai pas compris votre commande."))
     # Verbe locale-aware (fallback fr si locale inconnue)
     try:
         locale_short = (handler_input.request_envelope.request.locale or "fr")[:2].lower()
@@ -678,7 +680,7 @@ class SelectIntentHandler(AbstractRequestHandler):
         if not selection:
             jee.post_jee_event(RESPONSE_NONE, RESPONSE_NONE)
             data = handler_input.attributes_manager.request_attributes.get("_", {})
-            return _handle_response(handler_input, data.get(prompts.ERROR_CONFIG, "Sélection introuvable"))
+            return _handle_response(handler_input, data.get(prompts.NO_MATCH, "Je n'ai pas compris votre sélection."))
 
         jee.post_jee_event(selection, RESPONSE_SELECT)
         data = handler_input.attributes_manager.request_attributes.get("_", {})
