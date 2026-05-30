@@ -160,8 +160,11 @@
             "lance {Command}",
             "active {Command}",
             "démarre {Command}",
+            "demarre {Command}",
             "exécute {Command}",
-            "déclenche {Command}"
+            "execute {Command}",
+            "déclenche {Command}",
+            "declenche {Command}"
           ]
         },
         {
@@ -188,8 +191,11 @@
           "name": "VoiceTurnOff",
           "samples": [
             "éteins {Command}",
+            "eteins {Command}",
+            "eteindre {Command}",
             "ferme {Command}",
             "arrête {Command}",
+            "arrete {Command}",
             "coupe {Command}",
             "descends {Command}"
           ]
@@ -206,6 +212,7 @@
             "mets {Command}",
             "fais {Command}",
             "règle {Command}",
+            "regle {Command}",
             "configure {Command}"
           ]
         },

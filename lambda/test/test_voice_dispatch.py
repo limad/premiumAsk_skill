@@ -181,6 +181,55 @@ class TestHandleVoiceIntent:
 
 
 # ────────────────────────────────────────────────────────────────────────────
+# Date intent mal routé — fallback vers Jeedom voiceRouter
+# ────────────────────────────────────────────────────────────────────────────
+
+class TestMisroutedDateIntent:
+    def test_date_without_slots_forwards_raw_text_to_jeedom(self, lambda_mod):
+        hi = _make_handler_input(
+            intent_name="Date",
+            slots={},
+            locale="fr-FR",
+        )
+        hi.request_envelope.request.input_transcript = "eteindre le four"
+
+        with patch.object(lambda_mod, "JeeAsk") as MockJee:
+            inst = MockJee.return_value
+            inst.post_voice_command.return_value = {
+                "reply": "Le four est éteint",
+                "matched": True,
+                "ambiguous": False,
+                "options": [],
+                "http_error": False,
+            }
+            handler = lambda_mod.DateTimeIntentHandler()
+            handler.handle(hi)
+
+        MockJee.assert_called_once_with(hi, fetch_question=False)
+        inst.post_voice_command.assert_called_once_with("eteindre le four")
+        hi.response_builder.speak.assert_called_once_with("Le four est éteint")
+        hi.response_builder.set_should_end_session.assert_called_with(True)
+
+    def test_date_without_raw_text_logs_trace_and_no_match(self, lambda_mod):
+        hi = _make_handler_input(
+            intent_name="Date",
+            slots={},
+            locale="fr-FR",
+            request_attrs={"_": {"NO_MATCH": "Aucune commande."}},
+        )
+
+        with patch.object(lambda_mod, "JeeAsk") as MockJee:
+            inst = MockJee.return_value
+            handler = lambda_mod.DateTimeIntentHandler()
+            handler.handle(hi)
+
+        inst.post_voice_command.assert_not_called()
+        inst.post_jee_log.assert_called_once()
+        hi.response_builder.speak.assert_called_once_with("Aucune commande.")
+        hi.response_builder.set_should_end_session.assert_called_with(True)
+
+
+# ────────────────────────────────────────────────────────────────────────────
 # DisambiguationIntentHandler — sélection 1-N
 # ────────────────────────────────────────────────────────────────────────────
 

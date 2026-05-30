@@ -169,8 +169,8 @@ def _qa_guard_no_question(handler_input, jee, label: str):
     Date) : ces intents n'ont de sens que pendant un dialogue Q/A. Si le NLU les
     déclenche hors contexte (ex: "allumer le four" capté par l'intent Date via le
     slot AMAZON.DATE), aucune QuestionState n'est active et le slot ne contient pas
-    la phrase brute (impossible de rerouter). On répond proprement NO_MATCH au lieu
-    de POSTer un event vide → évite la réponse sans speech qu'Alexa rejette
+    la phrase brute. On répond proprement NO_MATCH au lieu de POSTer un event vide
+    → évite la réponse sans speech qu'Alexa rejette
     ("Désolé, j'ai quelques problèmes").
 
     Retourne une Response si hors contexte Q/A, sinon None (flow normal).
@@ -195,6 +195,22 @@ def _handle_response(handler, speak_out: Optional[str]):
     if speak_out:
         return handler.response_builder.speak(speak_out).response
     return handler.response_builder.response
+
+
+def _get_request_text(handler_input, slot_names=()):
+    """Retourne le texte brut si présent, sinon concatène les slots utiles."""
+    request = getattr(getattr(handler_input, "request_envelope", None), "request", None)
+    if request:
+        for attr in ("input_transcript", "inputTranscript", "raw_text", "rawText", "utterance"):
+            value = getattr(request, attr, None)
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+    values = []
+    for slot_name in slot_names:
+        value = (_get_resolved_slot(handler_input, slot_name) or "").strip()
+        if value and value != "?":
+            values.append(value)
+    return " ".join(values).strip()
 
 
 def _handle_qa_response(handler_input, jee, speak_out: Optional[str]):
@@ -597,6 +613,21 @@ def _dispatch_voice_query(handler_input, full_query: str, locale_short: str = "f
     return handler_input.response_builder.speak(result["reply"]).set_should_end_session(True).response
 
 
+def _forward_misrouted_intent(handler_input, intent_name: str, slot_names=()):
+    data = handler_input.attributes_manager.request_attributes.get("_", {})
+    locale_short = _locale_short(handler_input)
+    query = _get_request_text(handler_input, slot_names)
+    if not query:
+        jee = JeeAsk(handler_input, fetch_question=False)
+        logger.info("%s misrouted without usable text", intent_name)
+        jee.post_jee_log("Intent Alexa sans texte exploitable", intent=intent_name)
+        no_match = data.get(prompts.NO_MATCH, "Aucune commande trouvée pour cette demande.")
+        return handler_input.response_builder.speak(no_match).set_should_end_session(True).response
+
+    logger.info("%s misrouted -> VoiceCommand[%s]: %s", intent_name, locale_short, query)
+    return _dispatch_voice_query(handler_input, query, locale_short)
+
+
 class DisambiguationIntentHandler(AbstractRequestHandler):
     """
     Active si l'utilisateur a reçu un prompt "1 : phrase A, 2 : phrase B, lequel ?"
@@ -813,18 +844,16 @@ class DateTimeIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         logger.info("Date/Time Intent")
-        jee = JeeAsk(handler_input)
-        guard = _qa_guard_no_question(handler_input, jee, "Date")
-        if guard is not None:
-            return guard
         date = get_slot_value(handler_input, "Dates")
         time = get_slot_value(handler_input, "Times")
 
         if not date and not time:
-            jee.post_jee_event(RESPONSE_NONE, RESPONSE_NONE)
-            data = handler_input.attributes_manager.request_attributes.get("_", {})
-            return _handle_response(handler_input, data.get(prompts.ERROR_CONFIG, "Date ou heure introuvable"))
+            return _forward_misrouted_intent(handler_input, "Date", ("Dates", "Times"))
 
+        jee = JeeAsk(handler_input)
+        guard = _qa_guard_no_question(handler_input, jee, "Date")
+        if guard is not None:
+            return guard
         payload = json.dumps({**self._parse_date(date), **self._parse_time(time)})
         speak_output = jee.post_jee_event(payload, RESPONSE_DATE_TIME)
         return _handle_qa_response(handler_input, jee, speak_output)
