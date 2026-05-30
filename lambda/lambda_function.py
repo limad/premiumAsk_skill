@@ -134,6 +134,27 @@ def _string_to_bool(value, default: bool = False) -> bool:
     return default
 
 
+def _get_resolved_slot(handler_input, slot_name: str) -> Optional[str]:
+    """
+    Retourne la valeur résolue via entity resolution Alexa si disponible
+    (cas slot JeeCommand → valeur canonique Jeedom), sinon la valeur brute.
+    Fallback transparent : si aucune résolution, se comporte comme get_slot_value().
+    """
+    slot = get_slot(handler_input, slot_name)
+    if slot and slot.resolutions:
+        try:
+            for auth in (slot.resolutions.resolutions_per_authority or []):
+                if auth.status and auth.status.code and auth.status.code.value == "ER_SUCCESS_MATCH":
+                    if auth.values:
+                        resolved = auth.values[0].value.name
+                        if resolved:
+                            logger.debug("slot %s resolved: '%s' → '%s'", slot_name, slot.value, resolved)
+                            return resolved
+        except (AttributeError, IndexError, TypeError):
+            pass
+    return slot.value if slot else None
+
+
 def _add_hint(response_builder, text: str):
     """Écrase le hint système Alexa par un texte personnalisé (appareils à écran)."""
     try:
@@ -492,7 +513,7 @@ def _handle_voice_intent(handler_input, intent_name: str):
     on stocke les options en session et on demande à l'utilisateur de choisir.
     """
     jee = JeeAsk(handler_input, fetch_question=False)
-    query = (get_slot_value(handler_input, "Command") or "").strip()
+    query = (_get_resolved_slot(handler_input, "Command") or "").strip()
     if not query:
         data = handler_input.attributes_manager.request_attributes.get("_", {})
         return _handle_response(handler_input, data.get(prompts.NO_MATCH, "Je n'ai pas compris votre commande."))

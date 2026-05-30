@@ -28,7 +28,6 @@
                     "samples": [
                         "oui",
                         "ouais",
-                        "ouaip",
                         "d'accord",
                         "ok",
                         "okay",
@@ -154,7 +153,7 @@
                     "slots": [
                         {
                             "name": "Command",
-                            "type": "AMAZON.SearchQuery"
+                            "type": "JeeCommand"
                         }
                     ],
                     "samples": [
@@ -170,7 +169,7 @@
                     "slots": [
                         {
                             "name": "Command",
-                            "type": "AMAZON.SearchQuery"
+                            "type": "JeeCommand"
                         }
                     ],
                     "samples": [
@@ -184,7 +183,7 @@
                     "slots": [
                         {
                             "name": "Command",
-                            "type": "AMAZON.SearchQuery"
+                            "type": "JeeCommand"
                         }
                     ],
                     "samples": [
@@ -200,7 +199,7 @@
                     "slots": [
                         {
                             "name": "Command",
-                            "type": "AMAZON.SearchQuery"
+                            "type": "JeeCommand"
                         }
                     ],
                     "samples": [
@@ -241,7 +240,7 @@
                         }
                     ],
                     "samples": [
-            "le {Choice}",
+                        "le {Choice}",
                         "la {Choice}",
                         "numéro {Choice}",
                         "le numéro {Choice}",
@@ -253,7 +252,12 @@
                     ]
                 }
             ],
-            "types": []
+            "types": [
+                {
+                    "name": "JeeCommand",
+                    "values": []
+                }
+            ]
         }
     }
 }
