@@ -16,13 +16,21 @@ def _make_module(name: str) -> types.ModuleType:
     return mod
 
 
+# True si on a monté des stubs (SDK absent, ex: CI). Sert à décider si le patch
+# de compatibilité get_slot doit s'activer (il ne vaut que pour le VRAI SDK).
+_ASK_SDK_STUBBED = False
+
+
 def _ensure_ask_sdk_mocks():
     """Si ask_sdk_core n'est pas installé, monte des stubs minimaux."""
+    global _ASK_SDK_STUBBED
     try:
         import ask_sdk_core  # noqa: F401
         return  # vrai SDK dispo, on n'écrase pas
     except ImportError:
         pass
+
+    _ASK_SDK_STUBBED = True
 
     # Modules requis par les imports du Lambda
     pkgs = [
@@ -53,8 +61,23 @@ def _ensure_ask_sdk_mocks():
     utils = sys.modules["ask_sdk_core.utils"]
     utils.is_intent_name = lambda name: (lambda hi: getattr(hi, "_intent_name", None) == name)
     utils.is_request_type = lambda name: (lambda hi: getattr(hi, "_request_type", None) == name)
-    utils.get_slot_value = lambda hi, slot_name: getattr(hi, "_slots", {}).get(slot_name)
-    utils.get_slot = lambda hi, slot_name: getattr(hi, "_slot_objects", {}).get(slot_name)
+    utils.get_slot_value = lambda hi, slot_name: (getattr(hi, "_slots", None) or {}).get(slot_name) if isinstance(getattr(hi, "_slots", None), dict) else None
+
+    def _stub_get_slot(hi, slot_name):
+        """Fabrique un slot object depuis hi._slots (comme le vrai SDK retourne
+        un Slot avec .value/.resolutions). _get_resolved_slot s'en sert."""
+        slots = getattr(hi, "_slots", None)
+        if not isinstance(slots, dict):
+            return None
+        val = slots.get(slot_name)
+        if val is None:
+            return None
+        slot = MagicMock()
+        slot.value = val
+        slot.resolutions = None  # pas d'entity resolution en test → fallback .value
+        return slot
+
+    utils.get_slot = _stub_get_slot
     utils.get_intent_name = lambda hi: getattr(hi, "_intent_name", None)
     utils.get_account_linking_access_token = lambda hi: getattr(hi, "_access_token", None)
 
@@ -96,9 +119,10 @@ import pytest
 
 @pytest.fixture(autouse=True)
 def _compat_slot_utils():
-    try:
-        import ask_sdk_core  # noqa — vérifie juste que le vrai SDK est là
-    except ImportError:
+    # Le patch ne sert QUE pour le vrai SDK (get_slot lève TypeError sur MagicMock).
+    # En mode stub (CI sans ask-sdk), les stubs du conftest gèrent déjà tout —
+    # patcher par-dessus casserait get_slot_value. On ne fait donc rien.
+    if _ASK_SDK_STUBBED:
         yield
         return
 

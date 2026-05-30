@@ -21,8 +21,10 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
 
-      - name: Install pytest
-        run: pip install pytest
+      - name: Install deps
+        # urllib3 est requis par lambda_function.py (import direct). ask-sdk N'EST
+        # PAS installé : le conftest monte des stubs minimaux (_ensure_ask_sdk_mocks).
+        run: pip install pytest urllib3
 
       - name: Syntax check
         run: python -c "import ast; ast.parse(open('lambda/lambda_function.py').read()); print('OK')"
