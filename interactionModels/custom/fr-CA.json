@@ -212,23 +212,23 @@
         {
           "slots": [
             {
-              "name": "Command",
+              "name": "Query",
               "type": "AMAZON.SearchQuery"
             }
           ],
           "name": "VoiceQuery",
           "samples": [
-            "quelle est {Command}",
-            "quel est {Command}",
-            "quelle est l\u0027 {Command}",
-            "quel est l\u0027 {Command}",
-            "dis-moi {Command}",
-            "dis-moi l\u0027 {Command}",
-            "donne-moi {Command}",
-            "donne-moi l\u0027 {Command}",
-            "combien fait {Command}",
-            "c\u0027est quoi {Command}",
-            "c\u0027est quoi l\u0027 {Command}"
+            "quelle est {Query}",
+            "quel est {Query}",
+            "quelle est l\u0027 {Query}",
+            "quel est l\u0027 {Query}",
+            "dis-moi {Query}",
+            "dis-moi l\u0027 {Query}",
+            "donne-moi {Query}",
+            "donne-moi l\u0027 {Query}",
+            "combien fait {Query}",
+            "c\u0027est quoi {Query}",
+            "c\u0027est quoi l\u0027 {Query}"
           ]
         },
         {

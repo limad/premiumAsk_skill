@@ -211,6 +211,28 @@
         {
           "slots": [
             {
+              "name": "Query",
+              "type": "AMAZON.SearchQuery"
+            }
+          ],
+          "name": "VoiceQuery",
+          "samples": [
+            "what is {Query}",
+            "what's {Query}",
+            "what is the {Query}",
+            "what's the {Query}",
+            "tell me {Query}",
+            "tell me the {Query}",
+            "give me {Query}",
+            "give me the {Query}",
+            "how much is {Query}",
+            "what about {Query}",
+            "what is the temperature of {Query}"
+          ]
+        },
+        {
+          "slots": [
+            {
               "name": "Choice",
               "type": "AMAZON.NUMBER"
             }

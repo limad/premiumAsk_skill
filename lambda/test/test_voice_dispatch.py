@@ -41,6 +41,12 @@ def _make_handler_input(intent_name="VoiceTurnOn", slots=None, locale="fr-FR",
     hi = MagicMock()
     hi._intent_name = intent_name
     hi._slots = slots or {}
+    hi._slot_objects = {}
+    for name, value in hi._slots.items():
+        slot = MagicMock()
+        slot.value = value
+        slot.resolutions = None
+        hi._slot_objects[name] = slot
     hi.request_envelope.request.locale = locale
 
     # Session attributes (mutable dict)

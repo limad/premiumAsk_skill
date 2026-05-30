@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 
 # Locales supportées en production
-SUPPORTED_LOCALES = ["fr-FR", "en-US", "es-ES"]
+SUPPORTED_LOCALES = ["en-AU", "en-CA", "en-GB", "en-IN", "en-US", "es-ES", "fr-CA", "fr-FR"]
 
 # Intents que CHAQUE locale doit définir
 REQUIRED_INTENTS = {
@@ -38,6 +38,7 @@ REQUIRED_INTENTS = {
     "VoiceTurnOn",
     "VoiceTurnOff",
     "VoiceSet",
+    "VoiceQuery",
     # Disambiguation (item 2.3)
     "DisambiguationIntent",
 }
@@ -101,6 +102,22 @@ def test_voice_intents_have_searchquery_carrier_phrases(locale):
             # Carrier phrase = au moins 1 mot avant le slot
             before = sample.split("{Command}")[0].strip()
             assert before, f"{locale}/{name}: sample sans verbe carrier: '{sample}'"
+
+
+@pytest.mark.parametrize("locale", SUPPORTED_LOCALES)
+def test_voice_query_intent_uses_query_slot(locale):
+    """VoiceQuery doit utiliser le slot Query lu par lambda_function.py."""
+    intents = _intents_by_name(_load_model(locale))
+    intent = intents["VoiceQuery"]
+    assert intent.get("slots"), f"{locale}/VoiceQuery: pas de slot"
+    slot = intent["slots"][0]
+    assert slot["type"] == "AMAZON.SearchQuery", f"{locale}/VoiceQuery: slot doit être SearchQuery"
+    assert slot["name"] == "Query"
+    assert intent["samples"], f"{locale}/VoiceQuery: aucun sample"
+    for sample in intent["samples"]:
+        assert "{Query}" in sample, f"{locale}/VoiceQuery: sample sans {{Query}}: {sample}"
+        before = sample.split("{Query}")[0].strip()
+        assert before, f"{locale}/VoiceQuery: sample sans carrier phrase: '{sample}'"
 
 
 @pytest.mark.parametrize("locale", SUPPORTED_LOCALES)

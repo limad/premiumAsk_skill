@@ -25,39 +25,39 @@
         {
           "name": "AMAZON.YesIntent",
           "samples": [
-            "oui",
-            "ouais",
-            "ouaip",
-            "d\u0027accord",
+            "yes",
+            "yeah",
+            "yep",
             "ok",
             "okay",
-            "bien sûr",
+            "sure",
+            "right",
             "exact",
-            "affirmatif",
-            "tout à fait",
-            "valide"
+            "affirmative",
+            "totally",
+            "valid"
           ]
         },
         {
           "name": "AMAZON.NoIntent",
           "samples": [
-            "non",
-            "nan",
-            "pas du tout",
-            "négatif",
-            "jamais",
-            "non merci",
-            "pas question",
-            "annule"
+            "no",
+            "nope",
+            "not at all",
+            "negative",
+            "never",
+            "no thanks",
+            "no way",
+            "cancel"
           ]
         },
         {
           "name": "AMAZON.RepeatIntent",
           "samples": [
-            "répète",
-            "redis",
-            "encore",
-            "j\u0027ai pas compris",
+            "repeat",
+            "say again",
+            "again",
+            "i did not catch that",
             "pardon"
           ]
         },
@@ -70,11 +70,11 @@
           ],
           "name": "String",
           "samples": [
-            "c\u0027est {Strings}",
-            "je dis {Strings}",
-            "la réponse est {Strings}",
-            "ma réponse est {Strings}",
-            "dis {Strings}"
+            "it is {Strings}",
+            "i say {Strings}",
+            "the answer is {Strings}",
+            "my answer is {Strings}",
+            "say {Strings}"
           ]
         },
         {
@@ -86,13 +86,11 @@
           ],
           "name": "Select",
           "samples": [
-            "le {Selections}",
-            "la {Selections}",
-            "les {Selections}",
-            "je choisis {Selections}",
-            "sélectionne {Selections}",
-            "prends {Selections}",
-            "choisir {Selections}"
+            "the {Selections}",
+            "i choose {Selections}",
+            "select {Selections}",
+            "pick {Selections}",
+            "choose {Selections}"
           ]
         },
         {
@@ -105,9 +103,8 @@
           "name": "Number",
           "samples": [
             "{Numbers}",
-            "c\u0027est {Numbers}",
-            "le nombre {Numbers}",
-            "le numéro {Numbers}"
+            "it is {Numbers}",
+            "the number {Numbers}"
           ]
         },
         {
@@ -120,10 +117,9 @@
           "name": "Duration",
           "samples": [
             "{Durations}",
-            "pendant {Durations}",
-            "pour {Durations}",
-            "durant {Durations}",
-            "pour une durée de {Durations}"
+            "for {Durations}",
+            "during {Durations}",
+            "for a duration of {Durations}"
           ]
         },
         {
@@ -140,12 +136,12 @@
           "name": "Date",
           "samples": [
             "{Dates}",
-            "à {Times}",
-            "le {Dates}",
-            "pour le {Dates}",
-            "pour {Times}",
-            "{Dates} à {Times}",
-            "le {Dates} à {Times}"
+            "at {Times}",
+            "on {Dates}",
+            "for {Dates}",
+            "for {Times}",
+            "{Dates} at {Times}",
+            "on {Dates} at {Times}"
           ]
         },
         {
@@ -157,11 +153,12 @@
           ],
           "name": "VoiceLaunch",
           "samples": [
-            "lance {Command}",
-            "active {Command}",
-            "démarre {Command}",
-            "exécute {Command}",
-            "déclenche {Command}"
+            "launch {Command}",
+            "start {Command}",
+            "run {Command}",
+            "execute {Command}",
+            "trigger {Command}",
+            "activate {Command}"
           ]
         },
         {
@@ -173,9 +170,10 @@
           ],
           "name": "VoiceTurnOn",
           "samples": [
-            "allume {Command}",
-            "ouvre {Command}",
-            "monte {Command}"
+            "turn on {Command}",
+            "switch on {Command}",
+            "open {Command}",
+            "raise {Command}"
           ]
         },
         {
@@ -187,11 +185,12 @@
           ],
           "name": "VoiceTurnOff",
           "samples": [
-            "éteins {Command}",
-            "ferme {Command}",
-            "arrête {Command}",
-            "coupe {Command}",
-            "descends {Command}"
+            "turn off {Command}",
+            "switch off {Command}",
+            "close {Command}",
+            "stop {Command}",
+            "shut {Command}",
+            "lower {Command}"
           ]
         },
         {
@@ -203,32 +202,32 @@
           ],
           "name": "VoiceSet",
           "samples": [
-            "mets {Command}",
-            "fais {Command}",
-            "règle {Command}",
-            "configure {Command}"
+            "set {Command}",
+            "make {Command}",
+            "configure {Command}",
+            "adjust {Command}"
           ]
         },
         {
           "slots": [
             {
-              "name": "Command",
+              "name": "Query",
               "type": "AMAZON.SearchQuery"
             }
           ],
           "name": "VoiceQuery",
           "samples": [
-            "quelle est {Command}",
-            "quel est {Command}",
-            "quelle est l\u0027 {Command}",
-            "quel est l\u0027 {Command}",
-            "dis-moi {Command}",
-            "dis-moi l\u0027 {Command}",
-            "donne-moi {Command}",
-            "donne-moi l\u0027 {Command}",
-            "combien fait {Command}",
-            "c\u0027est quoi {Command}",
-            "c\u0027est quoi l\u0027 {Command}"
+            "what is {Query}",
+            "what's {Query}",
+            "what is the {Query}",
+            "what's the {Query}",
+            "tell me {Query}",
+            "tell me the {Query}",
+            "give me {Query}",
+            "give me the {Query}",
+            "how much is {Query}",
+            "what about {Query}",
+            "what is the temperature of {Query}"
           ]
         },
         {
@@ -240,15 +239,13 @@
           ],
           "name": "DisambiguationIntent",
           "samples": [
-            "le {Choice}",
-            "la {Choice}",
-            "numéro {Choice}",
-            "le numéro {Choice}",
+            "the {Choice}",
+            "number {Choice}",
             "option {Choice}",
-            "choix {Choice}",
-            "c\u0027est le {Choice}",
-            "je veux le {Choice}",
-            "je choisis le {Choice}"
+            "choice {Choice}",
+            "i pick {Choice}",
+            "i want number {Choice}",
+            "i choose {Choice}"
           ]
         }
       ],
