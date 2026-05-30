@@ -28,6 +28,7 @@
                     "samples": [
                         "oui",
                         "ouais",
+                        "ouaip",
                         "d'accord",
                         "ok",
                         "okay",
@@ -153,7 +154,7 @@
                     "slots": [
                         {
                             "name": "Command",
-                            "type": "JeeCommand"
+                            "type": "AMAZON.SearchQuery"
                         }
                     ],
                     "samples": [
@@ -169,7 +170,7 @@
                     "slots": [
                         {
                             "name": "Command",
-                            "type": "JeeCommand"
+                            "type": "AMAZON.SearchQuery"
                         }
                     ],
                     "samples": [
@@ -183,7 +184,7 @@
                     "slots": [
                         {
                             "name": "Command",
-                            "type": "JeeCommand"
+                            "type": "AMAZON.SearchQuery"
                         }
                     ],
                     "samples": [
@@ -199,7 +200,7 @@
                     "slots": [
                         {
                             "name": "Command",
-                            "type": "JeeCommand"
+                            "type": "AMAZON.SearchQuery"
                         }
                     ],
                     "samples": [
@@ -213,51 +214,21 @@
                     "name": "VoiceQuery",
                     "slots": [
                         {
-                            "name": "Command",
+                            "name": "Query",
                             "type": "AMAZON.SearchQuery"
                         }
                     ],
                     "samples": [
-                        "quelle est {Command}",
-                        "quel est {Command}",
-                        "quelle est l' {Command}",
-                        "quel est l' {Command}",
-                        "dis-moi {Command}",
-                        "dis-moi l' {Command}",
-                        "donne-moi {Command}",
-                        "donne-moi l' {Command}",
-                        "combien fait {Command}",
-                        "c'est quoi {Command}",
-                        "c'est quoi l' {Command}"
-                    ]
-                },
-                {
-                    "name": "DisambiguationIntent",
-                    "slots": [
-                        {
-                            "name": "Choice",
-                            "type": "AMAZON.NUMBER"
-                        }
-                    ],
-                    "samples": [
-                        "le {Choice}",
-                        "la {Choice}",
-                        "numéro {Choice}",
-                        "le numéro {Choice}",
-                        "option {Choice}",
-                        "choix {Choice}",
-                        "c'est le {Choice}",
-                        "je veux le {Choice}",
-                        "je choisis le {Choice}"
+                        "quelle est {Query}",
+                        "quel est {Query}",
+                        "dis-moi {Query}",
+                        "donne-moi {Query}",
+                        "combien fait {Query}",
+                        "c'est quoi {Query}"
                     ]
                 }
             ],
-            "types": [
-                {
-                    "name": "JeeCommand",
-                    "values": []
-                }
-            ]
+            "types": []
         }
     }
 }
