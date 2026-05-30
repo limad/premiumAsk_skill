@@ -81,3 +81,69 @@ def _ensure_ask_sdk_mocks():
 
 
 _ensure_ask_sdk_mocks()
+
+
+# ---------------------------------------------------------------------------
+# Compatibilité mock handler_input quand le vrai SDK est installé
+#
+# get_slot() et get_slot_value() du SDK lèvent TypeError si le request
+# n'est pas un IntentRequest réel. Les tests utilisent des MagicMock — on
+# patche les références dans lambda_function pour qu'elles retombent sur
+# hi._slots en cas de TypeError, sans toucher le comportement sur vrais objets.
+# ---------------------------------------------------------------------------
+import pytest
+
+
+@pytest.fixture(autouse=True)
+def _compat_slot_utils():
+    try:
+        import ask_sdk_core  # noqa — vérifie juste que le vrai SDK est là
+    except ImportError:
+        yield
+        return
+
+    try:
+        import lambda_function as _lf
+    except ImportError:
+        yield
+        return
+
+    from unittest.mock import patch, MagicMock as _MM
+
+    _orig_get_slot       = _lf.get_slot
+    _orig_get_slot_value = _lf.get_slot_value
+
+    def _get_slot(handler_input, slot_name):
+        try:
+            return _orig_get_slot(handler_input, slot_name)
+        except TypeError:
+            val = getattr(handler_input, "_slots", {}).get(slot_name)
+            if val is None:
+                return None
+            m = _MM()
+            m.value = val
+            m.resolutions = None
+            return m
+
+    def _get_slot_value(handler_input, slot_name):
+        slot = _get_slot(handler_input, slot_name)
+        return slot.value if slot else None
+
+    # is_intent_name et is_request_type utilisent isinstance(request, IntentRequest)
+    # qui échoue sur MagicMock. On les remplace par des versions qui tombent sur
+    # _intent_name / _request_type comme les stubs du mode sans SDK.
+    def _is_intent_name(name):
+        return lambda hi: getattr(hi, "_intent_name", None) == name
+
+    def _is_request_type(name):
+        return lambda hi: getattr(hi, "_request_type", None) == name
+
+    def _get_intent_name(hi):
+        return getattr(hi, "_intent_name", None)
+
+    with patch.object(_lf, "get_slot",        _get_slot), \
+         patch.object(_lf, "get_slot_value",   _get_slot_value), \
+         patch.object(_lf, "is_intent_name",   _is_intent_name), \
+         patch.object(_lf, "is_request_type",  _is_request_type), \
+         patch.object(_lf, "get_intent_name",  _get_intent_name):
+        yield

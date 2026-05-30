@@ -155,6 +155,14 @@ def _get_resolved_slot(handler_input, slot_name: str) -> Optional[str]:
     return slot.value if slot else None
 
 
+def _locale_short(handler_input) -> str:
+    """Code langue court (ex: 'fr') depuis la locale Echo, 'fr' par défaut."""
+    try:
+        return (handler_input.request_envelope.request.locale or "fr")[:2].lower()
+    except AttributeError:
+        return "fr"
+
+
 def _add_hint(response_builder, text: str):
     """Écrase le hint système Alexa par un texte personnalisé (appareils à écran)."""
     try:
@@ -521,15 +529,27 @@ def _handle_voice_intent(handler_input, intent_name: str):
         data = handler_input.attributes_manager.request_attributes.get("_", {})
         return _handle_response(handler_input, data.get(prompts.NO_MATCH, "Je n'ai pas compris votre commande."))
     # Verbe locale-aware (fallback fr si locale inconnue)
-    try:
-        locale_short = (handler_input.request_envelope.request.locale or "fr")[:2].lower()
-    except AttributeError:
-        locale_short = "fr"
+    locale_short = _locale_short(handler_input)
     verb = VOICE_VERBS.get(locale_short, VOICE_VERBS["fr"]).get(intent_name, "")
     full_query = f"{verb} {query}".strip()
     logger.info("VoiceCommand[%s]: %s", locale_short, full_query)
+    return _dispatch_voice_query(handler_input, full_query, locale_short)
+
+
+def _dispatch_voice_query(handler_input, full_query: str, locale_short: str = "fr"):
+    """
+    Forwarde une phrase vocale déjà reconstruite à Jeedom (voiceRouter) et gère
+    le résultat : erreur HTTP, désambiguïsation, no-match, succès.
+
+    Réutilisé par _handle_voice_intent ET par les handlers de réponse Q/A
+    (Select/String/…) quand ils sont déclenchés HORS contexte Q/A : le NLU peut
+    router "demande à jeedom la température du thermostat" vers l'intent Select
+    (sample générique "la {Selections}") alors qu'aucune question n'est en attente.
+    Dans ce cas on traite la phrase comme une commande/question vocale normale.
+    """
+    jee  = JeeAsk(handler_input, fetch_question=False)
+    data = handler_input.attributes_manager.request_attributes.get("_", {})
     result = jee.post_voice_command(full_query)
-    data   = handler_input.attributes_manager.request_attributes.get("_", {})
 
     # ── Erreur HTTP : Jeedom injoignable ou réponse invalide ─────────────────
     if result.get("http_error"):
@@ -689,6 +709,17 @@ class StringIntentHandler(AbstractRequestHandler):
         logger.info("String Intent")
         jee = JeeAsk(handler_input)
         strings = get_slot_value(handler_input, "Strings") or ""
+
+        # Hors contexte Q/A : aucune question active → le NLU a routé une commande
+        # vocale (sample "c'est {Strings}", "je dis {Strings}") vers String. On la
+        # traite comme une commande vocale au lieu de la POSTer comme réponse Q/A.
+        if not isinstance(jee.jee_state, QuestionState):
+            if strings:
+                logger.info("String hors Q/A → redispatch vocal: '%s'", strings)
+                return _dispatch_voice_query(handler_input, strings, _locale_short(handler_input))
+            data = handler_input.attributes_manager.request_attributes.get("_", {})
+            return _handle_response(handler_input, data.get(prompts.NO_MATCH, "Je n'ai pas compris."))
+
         speak_output = jee.post_jee_event(strings, RESPONSE_STRING)
         return _handle_qa_response(handler_input, jee, speak_output)
 
@@ -701,6 +732,18 @@ class SelectIntentHandler(AbstractRequestHandler):
         logger.info("Select Intent")
         jee = JeeAsk(handler_input)
         selection = jee.get_value_for_slot("Selections") or get_slot_value(handler_input, "Selections")
+
+        # Hors contexte Q/A : aucune question Jeedom en attente. Le NLU a routé une
+        # commande/question vocale (ex: "la température du thermostat") vers Select
+        # à cause du sample générique "la {Selections}". On la traite comme une
+        # commande vocale normale au lieu de répondre "Vous avez choisi …".
+        if not isinstance(jee.jee_state, QuestionState):
+            if selection:
+                logger.info("Select hors Q/A → redispatch vocal: '%s'", selection)
+                return _dispatch_voice_query(handler_input, selection, _locale_short(handler_input))
+            data = handler_input.attributes_manager.request_attributes.get("_", {})
+            return _handle_response(handler_input, data.get(prompts.NO_MATCH, "Je n'ai pas compris."))
+
         if not selection:
             jee.post_jee_event(RESPONSE_NONE, RESPONSE_NONE)
             data = handler_input.attributes_manager.request_attributes.get("_", {})
