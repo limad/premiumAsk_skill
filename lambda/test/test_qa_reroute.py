@@ -165,3 +165,46 @@ class TestStringRerouteWhenNoQuestion:
             lambda_mod.StringIntentHandler().handle(hi)
             inst.post_jee_event.assert_called_once()
             inst.post_voice_command.assert_not_called()
+
+
+# ────────────────────────────────────────────────────────────────────────────
+# Guard anti-crash : Date / Number / Duration hors contexte Q/A
+# (slot typé → pas de phrase brute à rerouter → NO_MATCH propre, jamais de crash)
+# ────────────────────────────────────────────────────────────────────────────
+
+class TestTypedQaGuardWhenNoQuestion:
+
+    @pytest.mark.parametrize("intent, handler_attr, slots", [
+        ("Date",     "DateTimeIntentHandler", {"Dates": None, "Times": None}),
+        ("Number",   "NumericIntentHandler",  {"Numbers": None}),
+        ("Duration", "DurationIntentHandler", {"Durations": None}),
+    ])
+    def test_no_question_says_no_match_without_posting(self, lambda_mod, intent, handler_attr, slots):
+        hi = _make_handler_input(
+            intent_name=intent, slots=slots,
+            request_attrs={"_": {"NO_MATCH": "Je n'ai pas compris votre demande.",
+                                 "ERROR_CONFIG": "Erreur config."}},
+        )
+        err = lambda_mod.QuestionStateError(text="pas de question")
+        with patch.object(lambda_mod, "JeeAsk") as MockJee:
+            inst = _mock_jee(MockJee, jee_state=err)
+            inst.get_value_for_slot.return_value = None
+            getattr(lambda_mod, handler_attr)().handle(hi)
+            # Pas de post (ni event ni voice) — slot typé n'a pas la phrase brute.
+            inst.post_jee_event.assert_not_called()
+            # Réponse parlée non vide (pas de crash "réponse sans speech").
+            assert hi.response_builder.speak.called
+            spoken = hi.response_builder.speak.call_args[0][0]
+            assert spoken == "Je n'ai pas compris votre demande."
+
+    def test_date_with_active_question_still_posts(self, lambda_mod):
+        hi = _make_handler_input(intent_name="Date", slots={"Dates": "2026-06-01", "Times": None})
+        q = lambda_mod.QuestionState(text="Quelle date ?", event_id="e1",
+                                     suppress_confirmation=False,
+                                     deviceSerialNumber="SN", textBrut="")
+        with patch.object(lambda_mod, "JeeAsk") as MockJee:
+            inst = _mock_jee(MockJee, jee_state=q)
+            inst.get_value_for_slot.return_value = None
+            inst.post_jee_event.return_value = "Date enregistrée"
+            lambda_mod.DateTimeIntentHandler().handle(hi)
+            inst.post_jee_event.assert_called_once()

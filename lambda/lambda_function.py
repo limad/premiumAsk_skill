@@ -163,6 +163,25 @@ def _locale_short(handler_input) -> str:
         return "fr"
 
 
+def _qa_guard_no_question(handler_input, jee, label: str):
+    """
+    Garde anti-crash pour les handlers de réponse Q/A à slot TYPÉ (Number/Duration/
+    Date) : ces intents n'ont de sens que pendant un dialogue Q/A. Si le NLU les
+    déclenche hors contexte (ex: "allumer le four" capté par l'intent Date via le
+    slot AMAZON.DATE), aucune QuestionState n'est active et le slot ne contient pas
+    la phrase brute (impossible de rerouter). On répond proprement NO_MATCH au lieu
+    de POSTer un event vide → évite la réponse sans speech qu'Alexa rejette
+    ("Désolé, j'ai quelques problèmes").
+
+    Retourne une Response si hors contexte Q/A, sinon None (flow normal).
+    """
+    if isinstance(jee.jee_state, QuestionState):
+        return None
+    data = handler_input.attributes_manager.request_attributes.get("_", {})
+    logger.info("%s hors contexte Q/A → réponse no-match", label)
+    return _handle_response(handler_input, data.get(prompts.NO_MATCH, "Je n'ai pas compris votre demande."))
+
+
 def _add_hint(response_builder, text: str):
     """Écrase le hint système Alexa par un texte personnalisé (appareils à écran)."""
     try:
@@ -692,6 +711,9 @@ class NumericIntentHandler(AbstractRequestHandler):
     def handle(self, handler_input):
         logger.info("Numeric Intent")
         jee = JeeAsk(handler_input)
+        guard = _qa_guard_no_question(handler_input, jee, "Numeric")
+        if guard is not None:
+            return guard
         number = get_slot_value(handler_input, "Numbers")
         if number in (None, "", "?"):
             jee.post_jee_event(RESPONSE_NONE, RESPONSE_NONE)
@@ -771,6 +793,9 @@ class DurationIntentHandler(AbstractRequestHandler):
     def handle(self, handler_input):
         logger.info("Duration Intent")
         jee = JeeAsk(handler_input)
+        guard = _qa_guard_no_question(handler_input, jee, "Duration")
+        if guard is not None:
+            return guard
         duration = get_slot_value(handler_input, "Durations")
         if not duration:
             jee.post_jee_event(RESPONSE_NONE, RESPONSE_NONE)
@@ -789,6 +814,9 @@ class DateTimeIntentHandler(AbstractRequestHandler):
     def handle(self, handler_input):
         logger.info("Date/Time Intent")
         jee = JeeAsk(handler_input)
+        guard = _qa_guard_no_question(handler_input, jee, "Date")
+        if guard is not None:
+            return guard
         date = get_slot_value(handler_input, "Dates")
         time = get_slot_value(handler_input, "Times")
 
