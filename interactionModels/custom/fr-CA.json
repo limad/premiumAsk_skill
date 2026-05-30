@@ -154,7 +154,7 @@
                     "slots": [
                         {
                             "name": "Command",
-                            "type": "AMAZON.SearchQuery"
+                            "type": "JeeCommand"
                         }
                     ],
                     "samples": [
@@ -170,7 +170,7 @@
                     "slots": [
                         {
                             "name": "Command",
-                            "type": "AMAZON.SearchQuery"
+                            "type": "JeeCommand"
                         }
                     ],
                     "samples": [
@@ -184,7 +184,7 @@
                     "slots": [
                         {
                             "name": "Command",
-                            "type": "AMAZON.SearchQuery"
+                            "type": "JeeCommand"
                         }
                     ],
                     "samples": [
@@ -200,7 +200,7 @@
                     "slots": [
                         {
                             "name": "Command",
-                            "type": "AMAZON.SearchQuery"
+                            "type": "JeeCommand"
                         }
                     ],
                     "samples": [
@@ -214,21 +214,26 @@
                     "name": "VoiceQuery",
                     "slots": [
                         {
-                            "name": "Command",
+                            "name": "Query",
                             "type": "AMAZON.SearchQuery"
                         }
                     ],
                     "samples": [
-                        "quelle est {Command}",
-                        "quel est {Command}",
-                        "dis-moi {Command}",
-                        "donne-moi {Command}",
-                        "combien fait {Command}",
-                        "c'est quoi {Command}"
+                        "quelle est {Query}",
+                        "quel est {Query}",
+                        "dis-moi {Query}",
+                        "donne-moi {Query}",
+                        "combien fait {Query}",
+                        "c'est quoi {Query}"
                     ]
                 }
             ],
-            "types": []
+            "types": [
+                {
+                    "name": "JeeCommand",
+                    "values": []
+                }
+            ]
         }
     }
 }

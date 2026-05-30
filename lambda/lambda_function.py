@@ -513,7 +513,10 @@ def _handle_voice_intent(handler_input, intent_name: str):
     on stocke les options en session et on demande à l'utilisateur de choisir.
     """
     jee = JeeAsk(handler_input, fetch_question=False)
-    query = (_get_resolved_slot(handler_input, "Command") or "").strip()
+    # VoiceQuery utilise le slot "Query" (AMAZON.SearchQuery, open-ended pour le LLM)
+    # Les autres Voice* utilisent "Command" (JeeCommand, NLU entraîné sur les équipements Jeedom)
+    slot_name = "Query" if intent_name == "VoiceQuery" else "Command"
+    query = (_get_resolved_slot(handler_input, slot_name) or "").strip()
     if not query:
         data = handler_input.attributes_manager.request_attributes.get("_", {})
         return _handle_response(handler_input, data.get(prompts.NO_MATCH, "Je n'ai pas compris votre commande."))
