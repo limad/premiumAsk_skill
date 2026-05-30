@@ -150,7 +150,7 @@
                     "slots": [
                         {
                             "name": "Command",
-                            "type": "AMAZON.SearchQuery"
+                            "type": "JeeCommand"
                         }
                     ],
                     "samples": [
@@ -167,7 +167,7 @@
                     "slots": [
                         {
                             "name": "Command",
-                            "type": "AMAZON.SearchQuery"
+                            "type": "JeeCommand"
                         }
                     ],
                     "samples": [
@@ -182,7 +182,7 @@
                     "slots": [
                         {
                             "name": "Command",
-                            "type": "AMAZON.SearchQuery"
+                            "type": "JeeCommand"
                         }
                     ],
                     "samples": [
@@ -199,7 +199,7 @@
                     "slots": [
                         {
                             "name": "Command",
-                            "type": "AMAZON.SearchQuery"
+                            "type": "JeeCommand"
                         }
                     ],
                     "samples": [
@@ -213,17 +213,17 @@
                     "name": "VoiceQuery",
                     "slots": [
                         {
-                            "name": "Command",
+                            "name": "Query",
                             "type": "AMAZON.SearchQuery"
                         }
                     ],
                     "samples": [
-                        "what is {Command}",
-                        "what's {Command}",
-                        "tell me {Command}",
-                        "how much is {Command}",
-                        "give me {Command}",
-                        "read {Command}"
+                        "what is {Query}",
+                        "what's {Query}",
+                        "tell me {Query}",
+                        "how much is {Query}",
+                        "give me {Query}",
+                        "read {Query}"
                     ]
                 },
                 {
@@ -245,7 +245,12 @@
                     ]
                 }
             ],
-            "types": []
+            "types": [
+                {
+                    "name": "JeeCommand",
+                    "values": []
+                }
+            ]
         }
     }
 }
