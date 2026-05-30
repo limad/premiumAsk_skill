@@ -150,7 +150,7 @@
                     "slots": [
                         {
                             "name": "Command",
-                            "type": "JeeCommand"
+                            "type": "AMAZON.SearchQuery"
                         }
                     ],
                     "samples": [
@@ -167,7 +167,7 @@
                     "slots": [
                         {
                             "name": "Command",
-                            "type": "JeeCommand"
+                            "type": "AMAZON.SearchQuery"
                         }
                     ],
                     "samples": [
@@ -181,7 +181,7 @@
                     "slots": [
                         {
                             "name": "Command",
-                            "type": "JeeCommand"
+                            "type": "AMAZON.SearchQuery"
                         }
                     ],
                     "samples": [
@@ -197,7 +197,7 @@
                     "slots": [
                         {
                             "name": "Command",
-                            "type": "JeeCommand"
+                            "type": "AMAZON.SearchQuery"
                         }
                     ],
                     "samples": [
@@ -211,16 +211,16 @@
                     "name": "VoiceQuery",
                     "slots": [
                         {
-                            "name": "Query",
+                            "name": "Command",
                             "type": "AMAZON.SearchQuery"
                         }
                     ],
                     "samples": [
-                        "cuál es {Query}",
-                        "qué es {Query}",
-                        "dime {Query}",
-                        "cuánto vale {Query}",
-                        "dame {Query}"
+                        "cuál es {Command}",
+                        "qué es {Command}",
+                        "dime {Command}",
+                        "cuánto vale {Command}",
+                        "dame {Command}"
                     ]
                 },
                 {
@@ -242,12 +242,7 @@
                     ]
                 }
             ],
-            "types": [
-                {
-                    "name": "JeeCommand",
-                    "values": []
-                }
-            ]
+            "types": []
         }
     }
 }

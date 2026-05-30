@@ -154,7 +154,7 @@
                     "slots": [
                         {
                             "name": "Command",
-                            "type": "JeeCommand"
+                            "type": "AMAZON.SearchQuery"
                         }
                     ],
                     "samples": [
@@ -170,7 +170,7 @@
                     "slots": [
                         {
                             "name": "Command",
-                            "type": "JeeCommand"
+                            "type": "AMAZON.SearchQuery"
                         }
                     ],
                     "samples": [
@@ -184,7 +184,7 @@
                     "slots": [
                         {
                             "name": "Command",
-                            "type": "JeeCommand"
+                            "type": "AMAZON.SearchQuery"
                         }
                     ],
                     "samples": [
@@ -200,7 +200,7 @@
                     "slots": [
                         {
                             "name": "Command",
-                            "type": "JeeCommand"
+                            "type": "AMAZON.SearchQuery"
                         }
                     ],
                     "samples": [
@@ -214,26 +214,21 @@
                     "name": "VoiceQuery",
                     "slots": [
                         {
-                            "name": "Query",
+                            "name": "Command",
                             "type": "AMAZON.SearchQuery"
                         }
                     ],
                     "samples": [
-                        "quelle est {Query}",
-                        "quel est {Query}",
-                        "dis-moi {Query}",
-                        "donne-moi {Query}",
-                        "combien fait {Query}",
-                        "c'est quoi {Query}"
+                        "quelle est {Command}",
+                        "quel est {Command}",
+                        "dis-moi {Command}",
+                        "donne-moi {Command}",
+                        "combien fait {Command}",
+                        "c'est quoi {Command}"
                     ]
                 }
             ],
-            "types": [
-                {
-                    "name": "JeeCommand",
-                    "values": []
-                }
-            ]
+            "types": []
         }
     }
 }
