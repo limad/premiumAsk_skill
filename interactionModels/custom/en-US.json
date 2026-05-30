@@ -213,17 +213,17 @@
                     "name": "VoiceQuery",
                     "slots": [
                         {
-                            "name": "Query",
+                            "name": "Command",
                             "type": "AMAZON.SearchQuery"
                         }
                     ],
                     "samples": [
-                        "what is {Query}",
-                        "what's {Query}",
-                        "tell me {Query}",
-                        "how much is {Query}",
-                        "give me {Query}",
-                        "read {Query}"
+                        "what is {Command}",
+                        "what's {Command}",
+                        "tell me {Command}",
+                        "how much is {Command}",
+                        "give me {Command}",
+                        "read {Command}"
                     ]
                 },
                 {
